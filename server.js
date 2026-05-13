@@ -7,12 +7,12 @@ const app = express();
 app.use(cors());
 
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 120 });
-const TIMEOUT = 7000;
+const TIMEOUT = 5000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.1', 
-    name: '🧲Link-Dz',
+    version: '2.5.3', 
+    name: '♦️Link-Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
@@ -175,7 +175,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     if (!infoHash && !stream.url) continue;
 
                     sourceStreams.push({
-                        name: `${source.name} \n ${info.quality.split(':')[1]}`,
+                        name: `${source.name} \n${info.quality.split(':')[1]}`,
                         title: `${size}  |👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
@@ -183,7 +183,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     });
 
                     // Limite : 15 par source
-                    if (sourceStreams.length >= 15) break;
+                    if (sourceStreams.length >= 20) break;
                 }
                 return sourceStreams;
             }
