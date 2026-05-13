@@ -199,14 +199,12 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
+    // Tri
     allStreams.sort((a, b) => {
-        const getScore = (name) => {
-            if (name.includes('4K')) return 10;
-            if (name.includes('1080p')) return 7;
-            if (name.includes('720p')) return 5;
-            return 1;
-        };
-        return getScore(b.name) - getScore(a.name);
+        const qA = getQualityScore(a.name + a.title);
+        const qB = getQualityScore(b.name + b.title);
+        if (qB !== qA) return qB - qA;
+        return getSeeders(b.title) - getSeeders(a.title);
     });
     
     const result = { streams: allStreams.slice(0, 40) };
