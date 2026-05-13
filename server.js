@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.3.9', 
+    version: '2.4.0', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -71,21 +71,32 @@ if (t.includes('2160p')) extra.push('2160p');
 if (t.includes('1080p')) extra.push('1080p');
 if (t.includes('720p')) extra.push('720p');
 if (t.includes('480p')) extra.push('480p');
+
 if (t.includes('hevc') || t.includes('x265')) extra.push('📽️ HEVC');
 if (t.includes('x264')) extra.push('🎬 x264');
+
 if (t.includes('hdr')) extra.push('✨ HDR');
 if (t.includes('hdr10')) extra.push('✨ HDR10');
 if (t.includes('dolby vision') || t.includes('dv')) extra.push('🌈 Dolby Vision');
+
 if (t.includes('atmos')) extra.push('🎧 Atmos');
 if (t.includes('dts')) extra.push('🔊 DTS');
 if (t.includes('aac')) extra.push('🔉 AAC');
 if (t.includes('truehd')) extra.push('🎵 TrueHD');
+
+if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬 SUB');
+if (t.includes('softsub')) extra.push('📝 SoftSub');
+if (t.includes('hardsub')) extra.push('📌 HardSub');
+
+if (t.includes('dub') || t.includes('dubbed')) extra.push('🎙️ DUB');
+if (t.includes('dual audio')) extra.push('🎚️ Dual Audio');
+
 if (t.includes('proper')) extra.push('✅ PROPER');
 if (t.includes('repack')) extra.push('♻️ REPACK');
 if (t.includes('extended')) extra.push('🧩 EXTENDED');
 if (t.includes('uncut')) extra.push('✂️ UNCUT');
     
-    return { quality, extra: extra.join(' • '), lang };
+    return { quality, extra: extra.join('|'), lang };
 }
 
 function getSeeders(title) {
@@ -131,7 +142,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     if (!infoHash && !stream.url) return null;
 
                     // Infos regroupées : Langue + Seeds + Formats
-                    const technicalDetails = `${info.lang} | 👤 Seeds: ${seeds} | ${info.extra || 'Standard'}`;
+                    const technicalDetails = `${info.lang}|👤:${seeds}|${info.extra || 'Standard'}`;
                     const originalFileName = stream.title ? stream.title.split('\n')[0] : source.name;
 
                     return {
