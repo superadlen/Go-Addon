@@ -11,7 +11,7 @@ const TIMEOUT = 5000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.3', 
+    version: '2.5.4', 
     name: '♦️Link-Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -50,7 +50,7 @@ function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
-    let lang = '🗣️= ❓🎧';
+    let lang = '🎧= ❓🔉';
 
     const languages = {
         fr: { flag: '🇫🇷', names: ['french', ' vf ', ' vff ', 'francais'], label: 'VF' },
@@ -94,16 +94,16 @@ function getQualityInfo(title) {
 
     if (found.length >= 5) {
         const flags = found.slice(0, 5).map(code => languages[code].flag).join('/');
-        lang = `🗣️🔉= ${flags} `;
+        lang = `🎧= ${flags} `;
     } else if (found.length >= 2) {
         const flags = found.map(code => languages[code].flag).join('/');
-        lang = `🗣️🔉= ${flags} `;
+        lang = `🎧= ${flags} `;
     } else if (t.includes('multi')) {
-        lang = '🗣️🔉:= 🌍 MULTI ';
+        lang = '🎧:= 🌍 MULTI ';
     } else if (found.length === 1) {
         const code = found[0];
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
-        lang = `🗣️🔉= ${languages[code].flag}${suffix}`;
+        lang = `🎧= ${languages[code].flag}${suffix}`;
     }
 
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬:🖥️= 4K';
