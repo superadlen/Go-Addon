@@ -199,21 +199,15 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
-    // Tri
-allStreams.sort((a, b) => {
-    const aText = (a.name + ' ' + a.title).toLowerCase();
-    const bText = (b.name + ' ' + b.title).toLowerCase();
-
-    const qA = getQualityScore(aText);
-    const qB = getQualityScore(bText);
-
-    if (qB !== qA) return qB - qA;
-
-    const sA = getSeeders(a.title);
-    const sB = getSeeders(b.title);
-
-    return sB - sA;
-});
+    allStreams.sort((a, b) => {
+        const getScore = (name) => {
+            if (name.includes('4K')) return 10;
+            if (name.includes('1080p')) return 7;
+            if (name.includes('720p')) return 5;
+            return 1;
+        };
+        return getScore(b.name) - getScore(a.name);
+    });
     
     const result = { streams: allStreams.slice(0, 40) };
     cache.set(cacheKey, result);
