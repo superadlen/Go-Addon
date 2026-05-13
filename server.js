@@ -32,13 +32,24 @@ function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
-    let lang = '🌐';
+    let lang = '🗣️🌐';
 
     // Détection de la langue
-    if (t.includes('multi') || (t.includes('fr') && t.includes('en'))) lang = '🇫🇷/🇺🇸 MULTI';
-    else if (t.includes('french') || t.includes(' vff ') || t.includes(' vf ')) lang = '🇫🇷 VF';
-    else if (t.includes('vostfr')) lang = '🇫🇷 VOSTFR';
-    else if (t.includes('english') || t.includes(' en ') || t.includes(' eng ')) lang = '🇺🇸 EN';
+   if (t.includes('multi') || (t.includes('fr') && t.includes('en'))) lang = '🗣️🇫🇷/🇺🇸 MULTI';
+else if (t.includes('french') || t.includes(' vff ') || t.includes(' vf ')) lang = '🔉🇫🇷 VF';
+else if (t.includes('vostfr')) lang = '🇫🇷 VOSTFR';
+else if (t.includes('english') || t.includes(' en ') || t.includes(' eng ')) lang = '🔉🇺🇸 EN';
+else if (t.includes('arabic') || t.includes(' ar ') || t.includes(' ara ')) lang = '🔉🇩🇿 AR';
+else if (t.includes('spanish') || t.includes(' es ') || t.includes(' spa ')) lang = '🔉🇪🇸 ES';
+else if (t.includes('german') || t.includes(' de ') || t.includes(' ger ')) lang = '🔉🇩🇪 DE';
+else if (t.includes('italian') || t.includes(' it ') || t.includes(' ita ')) lang = '🔉🇮🇹 IT';
+else if (t.includes('portuguese') || t.includes(' pt ') || t.includes(' por ')) lang = '🔉🇵🇹 PT';
+else if (t.includes('russian') || t.includes(' ru ') || t.includes(' rus ')) lang = '🔉🇷🇺 RU';
+else if (t.includes('turkish') || t.includes(' tr ') || t.includes(' tur ')) lang = '🔉🇹🇷 TR';
+else if (t.includes('hindi') || t.includes(' hi ') || t.includes(' hin ')) lang = '🔉🇮🇳 HI';
+else if (t.includes('japanese') || t.includes(' jp ') || t.includes(' jpn ')) lang = '🔉🇯🇵 JP';
+else if (t.includes('korean') || t.includes(' kr ') || t.includes(' kor ')) lang = '🔉🇰🇷 KR';
+else if (t.includes('chinese') || t.includes(' cn ') || t.includes(' chi ')) lang = '🔉🇨🇳 CN';
     
     // Qualité
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬 4K';
@@ -48,10 +59,31 @@ function getQualityInfo(title) {
     else quality = '🎥 HD';
     
     // Formats
-    if (t.includes('bluray') || t.includes('bdrip')) extra.push('BluRay');
-    if (t.includes('remux')) extra.push('REMUX');
-    if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
-    if (t.includes('10bit')) extra.push('10bit');
+    if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿 BluRay');
+if (t.includes('remux')) extra.push('📀 REMUX');
+if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐 WEB-DL');
+if (t.includes('webrip')) extra.push('🌍 WEBRip');
+if (t.includes('dvdrip')) extra.push('📼 DVDRip');
+if (t.includes('hdrip')) extra.push('🎞️ HDRip');
+if (t.includes('uhd')) extra.push('🖥️ UHD');
+if (t.includes('4k')) extra.push('4️⃣K');
+if (t.includes('2160p')) extra.push('2160p');
+if (t.includes('1080p')) extra.push('1080p');
+if (t.includes('720p')) extra.push('720p');
+if (t.includes('480p')) extra.push('480p');
+if (t.includes('hevc') || t.includes('x265')) extra.push('📽️ HEVC');
+if (t.includes('x264')) extra.push('🎬 x264');
+if (t.includes('hdr')) extra.push('✨ HDR');
+if (t.includes('hdr10')) extra.push('✨ HDR10');
+if (t.includes('dolby vision') || t.includes('dv')) extra.push('🌈 Dolby Vision');
+if (t.includes('atmos')) extra.push('🎧 Atmos');
+if (t.includes('dts')) extra.push('🔊 DTS');
+if (t.includes('aac')) extra.push('🔉 AAC');
+if (t.includes('truehd')) extra.push('🎵 TrueHD');
+if (t.includes('proper')) extra.push('✅ PROPER');
+if (t.includes('repack')) extra.push('♻️ REPACK');
+if (t.includes('extended')) extra.push('🧩 EXTENDED');
+if (t.includes('uncut')) extra.push('✂️ UNCUT');
     
     return { quality, extra: extra.join(' • '), lang };
 }
