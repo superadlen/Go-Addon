@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.4.2', 
+    version: '2.4.5', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -28,77 +28,57 @@ const SOURCES = [
     { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Link-Dz Ultra' }
 ];
 
+function getFileSize(title) {
+    const match = (title || '').match(/(\d+(?:\.\d+)?\s*(?:GB|MB|GiB|MiB))/i);
+    return match ? `💾:${match[0].toUpperCase()}` : '💾:N/A';
+}
+
+function getSeeders(title) {
+    const match = (title || '').match(/👤\s*(\d+)/);
+    return match ? `👤:${match[1]}` : '👤:0';
+}
+
 function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
     let lang = '🗣️:🎧';
 
-    // 40 langues
+    // Logique de Langues
     const languages = {
-        fr: { flag: '🇫🇷', names: ['french', ' vf ', ' vff ', 'francais'], label: 'VF' },
-        en: { flag: '🇺🇸', names: ['english', ' en ', ' eng ', 'anglais'], label: 'VO' },
-        es: { flag: '🇪🇸', names: ['spanish', ' es ', ' spa ', 'espanol'] },
-        it: { flag: '🇮🇹', names: ['italian', ' it ', ' ita ', 'italiano'] },
-        pt: { flag: '🇵🇹', names: ['portuguese', ' pt ', ' por ', 'portugues'] },
-        ru: { flag: '🇷🇺', names: ['russian', ' ru ', ' rus ', 'russe'] },
-        de: { flag: '🇩🇪', names: ['german', ' de ', ' ger ', 'deutsch'] },
-        ja: { flag: '🇯🇵', names: ['japanese', ' ja ', ' jpn ', 'japonais'] },
-        zh: { flag: '🇨🇳', names: ['chinese', ' zh ', ' chi ', 'chinois'] },
-        ko: { flag: '🇰🇷', names: ['korean', ' ko ', ' kor ', 'coréen'] },
-        ar: { flag: '🇸🇦', names: ['arabic', ' ar ', ' ara ', 'arabe'] },
-        hi: { flag: '🇮🇳', names: ['hindi', ' hi ', ' hin '] },
-        bn: { flag: '🇧🇩', names: ['bengali', ' bn ', ' ben '] },
-        vi: { flag: '🇻🇳', names: ['vietnamese', ' vi ', ' vie '] },
-        th: { flag: '🇹🇭', names: ['thai', ' th ', ' tha '] },
-        id: { flag: '🇮🇩', names: ['indonesian', ' id ', ' ind '] },
-        tr: { flag: '🇹🇷', names: ['turkish', ' tr ', ' tur '] },
-        nl: { flag: '🇳🇱', names: ['dutch', ' nl ', ' dut '] },
-        pl: { flag: '🇵🇱', names: ['polish', ' pl ', ' pol '] },
-        uk: { flag: '🇺🇦', names: ['ukrainian', ' uk ', ' ukr '] },
-        ro: { flag: '🇷🇴', names: ['romanian', ' ro ', ' ron '] },
-        hu: { flag: '🇭🇺', names: ['hungarian', ' hu ', ' hun '] },
-        cs: { flag: '🇨🇿', names: ['czech', ' cs ', ' ces '] },
-        sv: { flag: '🇸🇪', names: ['swedish', ' sv ', ' swe '] },
-        da: { flag: '🇩🇰', names: ['danish', ' da ', ' dan '] },
-        no: { flag: '🇳🇴', names: ['norwegian', ' no ', ' nor '] },
-        fi: { flag: '🇫🇮', names: ['finnish', ' fi ', ' fin '] },
-        el: { flag: '🇬🇷', names: ['greek', ' el ', ' gre '] },
-        he: { flag: '🇮🇱', names: ['hebrew', ' he ', ' heb '] },
-        fa: { flag: '🇮🇷', names: ['persian', ' fa ', ' per '] },
-        sw: { flag: '🇹🇿', names: ['swahili', ' sw ', ' swa '] },
-        ta: { flag: '🇮🇳', names: ['tamil', ' ta ', ' tam '] },
-        te: { flag: '🇮🇳', names: ['telugu', ' te ', ' tel '] }
+        fr: { code: 'fr', flag: '🇫🇷', names: ['french', ' vf ', ' vff '], label: 'VF' },
+        en: { code: 'en', flag: '🇺🇸', names: ['english', ' en ', ' eng '], label: 'VO' },
+        es: { code: 'es', flag: '🇪🇸', names: ['spanish', ' es ', ' spa '] },
+        it: { code: 'it', flag: '🇮🇹', names: ['italian', ' it ', ' ita '] },
+        pt: { code: 'pt', flag: '🇵🇹', names: ['portuguese', ' pt ', ' por '] },
+        ru: { code: 'ru', flag: '🇷🇺', names: ['russian', ' ru ', ' rus '] }
     };
 
-    // Détection
-    const found = Object.entries(languages)
-        .filter(([code, data]) => t.includes(code) || data.names.some(name => t.includes(name)))
-        .map(([code]) => code);
+    const found = Object.values(languages)
+        .filter(l => t.includes(l.code) || l.names.some(name => t.includes(name)))
+        .map(l => l.code);
 
-    // Affichage selon le nombre trouvé
-    if (found.length >= 5) {
-        const flags = found.slice(0, 5).map(code => languages[code].flag).join('/');
-        lang = `🗣️:${flags} `;
-    } else if (found.length >= 2) {
-        const flags = found.map(code => languages[code].flag).join('/');
-        lang = `🗣️:${flags} `;
-    } else if (t.includes('multi')) {
-        lang = '🗣️:🌍MULTI ';
-    } else if (found.length === 1) {
+    if (found.length >= 4) lang = '🗣️:🌍 MULTI (4+) 🎶';
+    else if (found.length >= 2) {
+        const [a, b] = found;
+        const flags = { fr: '🇫🇷', en: '🇺🇸', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', ru: '🇷🇺' };
+        lang = `🗣️:${flags[a]}/${flags[b]} 🎶`;
+    } else if (t.includes('multi')) lang = '🗣️:🌍 MULTI 🎶';
+    else if (found.length === 1) {
         const code = found[0];
+        const flag = languages[code].flag;
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
-        lang = `🗣️:${languages[code].flag}${suffix}`;
+        lang = `🗣️:${flag}${suffix}`;
     }
 
-    // --- DÉTECTION QUALITÉ ---
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬: 4K';
-    else if (t.includes('1080p')) quality = '📺: 1080p';
-    else if (t.includes('720p')) quality = '🖥️: 720p';
-    else if (t.includes('cam')) quality = '📱: CAM';
-    else quality = '🎥: HD';
+    // Qualité
+    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
+    else if (t.includes('1080p')) quality = '📺:1080p';
+    else if (t.includes('720p')) quality = '🖥️:720p';
+    else if (t.includes('cam')) quality = '📱:CAM';
+    else quality = '🎥:HD';
 
-    // --- DÉTECTION EXTRA / FORMATS ---
+    // Formats techniques
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
@@ -127,13 +107,7 @@ function getQualityInfo(title) {
     if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
     if (t.includes('proper')) extra.push('✅PROPER');
     if (t.includes('repack')) extra.push('♻️REPACK');
-
     return { quality, extra: extra.join('|'), lang };
-}
-
-function getSeeders(title) {
-    const match = (title || '').match(/👤\s*(\d+)/);
-    return match ? parseInt(match[1]) : 0;
 }
 
 app.get('/manifest.json', (req, res) => {
@@ -145,7 +119,7 @@ app.get('/', (req, res) => {
     res.send(`<body style="background:#0f0f1a;color:white;text-align:center;padding:50px;font-family:sans-serif;">
         <div style="background:#1a1a2e;padding:30px;border-radius:15px;max-width:500px;margin:0 auto;border:1px solid #303056;">
             <h1 style="color:#e94560;">⚡ Link-Dz Addon</h1>
-            <p>V2.4.2 - Système de Langue Dynamique</p>
+            <p>V2.4.5 - Infos structurées (3 lignes)</p>
             <a href="stremio://${req.get('host')}/manifest.json" style="background:#e94560;color:white;padding:15px 30px;border-radius:5px;text-decoration:none;font-weight:bold;display:inline-block;margin:20px 0;">🚀 Installer</a>
         </div>
     </body>`);
@@ -163,6 +137,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
             if (response.data?.streams) {
                 return response.data.streams.map(stream => {
                     const info = getQualityInfo(stream.title || '');
+                    const size = getFileSize(stream.title || '');
                     const seeds = getSeeders(stream.title || '');
                     
                     let infoHash = stream.infoHash || '';
@@ -173,12 +148,14 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     
                     if (!infoHash && !stream.url) return null;
 
-                    const technicalDetails = `${info.lang}|👤:${seeds}|${info.extra || 'Standard'}`;
-                    const originalFileName = stream.title ? stream.title.split('\n')[0] : source.name;
+                    // Organisation en 3 lignes pour le survol (title)
+                    const line1 = `${size} | ${seeds}`;
+                    const line2 = `${info.lang} | ${info.quality}`;
+                    const line3 = `${info.extra || 'Standard'}`;
 
                     return {
-                        name: `${source.name}\n${info.quality}`,
-                        title: `${technicalDetails}\n${originalFileName}`,
+                        name: `${source.name}\n${info.quality.split(':')[1]}`,
+                        title: `${line1}\n${line2}\n${line3}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
@@ -207,9 +184,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
             if (name.includes('720p')) return 5;
             return 1;
         };
-        const diff = getScore(b.name) - getScore(a.name);
-        if (diff !== 0) return diff;
-        return getSeeders(b.title) - getSeeders(a.title);
+        return getScore(b.name) - getScore(a.name);
     });
     
     const result = { streams: allStreams.slice(0, 40) };
@@ -218,4 +193,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.2 Online`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.5 Online`));
