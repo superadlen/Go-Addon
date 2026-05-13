@@ -22,10 +22,10 @@ const MANIFEST = {
 };
 
 const SOURCES = [
-    { url: 'https://filmora-production.up.railway.app', name: 'Link-Dz Max' },
-    { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Link-Dz Plus' },
+    { url: 'https://filmora-production.up.railway.app', name: 'Max' },
+    { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Ultra' },
     { url: 'https://str.zmb.lat/lite', name: 'Link-Dz Pro' },
-    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Link-Dz Ultra' }
+    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Plus+' }
 ];
 
 function getFileSize(title) {
