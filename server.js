@@ -13,9 +13,9 @@ app.use(express.json());
 // === MANIFESTE ===
 const manifest = {
     id: 'org.stremio.go-addon',
-    version: '2.0.0',
+    version: '3.0.0',
     name: 'Go Addon',
-    description: 'Torrents classés par qualité',
+    description: 'Torrents depuis MagnetDL',
     resources: ['stream'],
     types: ['movie', 'series'],
     idPrefixes: ['tt'],
@@ -26,187 +26,198 @@ app.get('/manifest.json', (req, res) => {
     res.json(manifest);
 });
 
-// === FONCTIONS UTILITAIRES ===
-function extractInfo(title) {
-    const info = { resolution: '1080p', codec: 'x264', hdr: 'SDR' };
-    if (!title) return info;
+// === FONCTIONS ===
+function extraireQualite(titre) {
+    const qualite = { resolution: '1080p', codec: 'x264', hdr: 'SDR' };
+    if (!titre) return qualite;
     
-    if (title.match(/2160p|4K|UHD/i)) info.resolution = '2160p';
-    else if (title.match(/1080p/i)) info.resolution = '1080p';
-    else if (title.match(/720p/i)) info.resolution = '720p';
+    if (titre.match(/2160p|4k|uhd/i)) qualite.resolution = '2160p';
+    else if (titre.match(/1080p|fhd/i)) qualite.resolution = '1080p';
+    else if (titre.match(/720p|hd/i)) qualite.resolution = '720p';
     
-    if (title.match(/HEVC|HEVC|x265|h265/i)) info.codec = 'HEVC';
-    else if (title.match(/x264|h264|AVC/i)) info.codec = 'x264';
+    if (titre.match(/hevc|HEVC|x265|h265/i)) qualite.codec = 'HEVC';
+    else if (titre.match(/x264|h264|avc/i)) qualite.codec = 'x264';
     
-    if (title.includes('DV') || title.includes('Dolby Vision')) info.hdr = 'DV';
-    else if (title.includes('HDR10+')) info.hdr = 'HDR10+';
-    else if (title.includes('HDR')) info.hdr = 'HDR';
+    if (titre.match(/dolby.?vision|dv/i)) qualite.hdr = 'DV';
+    else if (titre.match(/hdr10\+/i)) qualite.hdr = 'HDR10+';
+    else if (titre.match(/hdr/i)) qualite.hdr = 'HDR';
     
-    return info;
+    return qualite;
 }
 
 function calculerScore(torrent) {
     let score = 0;
+    
+    // Résolution
     if (torrent.resolution === '2160p') score += 40;
     else if (torrent.resolution === '1080p') score += 30;
     else if (torrent.resolution === '720p') score += 20;
     else score += 10;
     
-    if (torrent.seeders >= 100) score += 30;
-    else if (torrent.seeders >= 50) score += 25;
-    else if (torrent.seeders >= 20) score += 20;
-    else if (torrent.seeders >= 10) score += 15;
-    else score += 5;
+    // Seeders
+    const s = torrent.seeders || 0;
+    if (s >= 100) score += 30;
+    else if (s >= 50) score += 25;
+    else if (s >= 20) score += 20;
+    else if (s >= 10) score += 15;
+    else if (s >= 5) score += 10;
+    else score += 2;
     
-    if (torrent.codec?.match(/HEVC|HEVC|x265|h265/i)) score += 15;
-    else if (torrent.codec?.match(/x264|h264|AVC/i)) score += 10;
+    // Codec
+    if (torrent.codec?.match(/hevc|HEVC|x265|h265/i)) score += 15;
+    else if (torrent.codec?.match(/x264|h264|avc/i)) score += 10;
     
+    // HDR
     if (torrent.hdr?.includes('DV')) score += 15;
     else if (torrent.hdr?.includes('HDR')) score += 12;
     
-    return score;
+    return Math.min(100, score);
 }
 
-// === SOURCE 1: Stremio-Jackett (fiable) ===
-async function searchJackett(type, imdbId) {
+// === RECHERCHE SUR MAGNETDL ===
+async function searchMagnetDL(query) {
     try {
-        const response = await axios.get(
-            `https://stremio-jackett.elfhosted.com/stream/${type}/${imdbId}.json`,
-            { timeout: 15000 }
-        );
+        console.log(`Recherche MagnetDL: ${query}`);
         
-        if (!response.data?.streams?.length) return [];
+        const response = await axios.get('https://www.magnetdl.com/search/', {
+            params: { q: query },
+            timeout: 15000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5'
+            }
+        });
         
-        return response.data.streams
-            .filter(s => s.infoHash)
-            .map(s => {
-                const title = s.title || '';
-                const info = extractInfo(title);
-                const seeders = parseInt(s.description?.match(/👤 (\d+)/)?.[1] || '0');
-                
-                return {
-                    infoHash: s.infoHash,
-                    title: title.substring(0, 100),
-                    seeders: seeders,
-                    resolution: info.resolution,
-                    codec: info.codec,
-                    hdr: info.hdr,
-                    magnet: s.url || `magnet:?xt=urn:btih:${s.infoHash}`,
-                    provider: 'Jackett'
-                };
+        const html = response.data;
+        
+        // Parser les résultats (recherche basique)
+        const torrents = [];
+        const rows = html.split('<tr>');
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            
+            // Extraire le titre
+            const titleMatch = row.match(/<a href="[^"]*" title="([^"]*)"/);
+            if (!titleMatch) continue;
+            const titre = titleMatch[1].trim();
+            
+            // Extraire le lien magnet
+            const magnetMatch = row.match(/href="(magnet:\?xt=urn:btih:[^"]*)"/);
+            if (!magnetMatch) continue;
+            const magnet = magnetMatch[1];
+            
+            // Extraire infoHash
+            const infoHashMatch = magnet.match(/btih:([a-fA-F0-9]{40})/);
+            if (!infoHashMatch) continue;
+            const infoHash = infoHashMatch[1].toLowerCase();
+            
+            // Extraire seeders
+            const seedersMatch = row.match(/<td class="s">(\d+)</);
+            const seeders = seedersMatch ? parseInt(seedersMatch[1]) : 0;
+            
+            // Extraire taille
+            const sizeMatch = row.match(/<td class="sz">([^<]+)</);
+            const taille = sizeMatch ? sizeMatch[1].trim() : '';
+            
+            const qualite = extraireQualite(titre);
+            
+            torrents.push({
+                infoHash: infoHash,
+                title: titre,
+                seeders: seeders,
+                resolution: qualite.resolution,
+                codec: qualite.codec,
+                hdr: qualite.hdr,
+                magnet: magnet,
+                provider: 'MagnetDL',
+                taille: taille
             });
+        }
+        
+        console.log(`MagnetDL: ${torrents.length} résultats`);
+        return torrents;
+        
     } catch (error) {
-        console.error('Jackett erreur:', error.message);
+        console.error('MagnetDL erreur:', error.message);
         return [];
     }
 }
 
-// === SOURCE 2: ThePirateBay+ (via API alternative) ===
-async function searchTPB(type, imdbId) {
+// === RECHERCHE VIA SOLIDTORRENTS ===
+async function searchSolidTorrents(query) {
     try {
-        // Utiliser l'API apibay.org
-        const response = await axios.get(`https://apibay.org/q.php`, {
-            params: { q: imdbId, cat: type === 'movie' ? '201' : '205' },
+        console.log(`Recherche SolidTorrents: ${query}`);
+        
+        const response = await axios.get('https://solidtorrents.net/api/v1/search', {
+            params: {
+                q: query,
+                sort: 'seeders',
+                order: 'desc',
+                limit: 10
+            },
+            timeout: 15000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.data?.results) return [];
+        
+        return response.data.results.map(r => {
+            const qualite = extraireQualite(r.title);
+            return {
+                infoHash: r.info_hash,
+                title: r.title,
+                seeders: r.seeders || 0,
+                resolution: qualite.resolution,
+                codec: qualite.codec,
+                hdr: qualite.hdr,
+                magnet: `magnet:?xt=urn:btih:${r.info_hash}&dn=${encodeURIComponent(r.title)}`,
+                provider: 'SolidTorrents',
+                taille: r.size || ''
+            };
+        });
+        
+    } catch (error) {
+        console.error('SolidTorrents erreur:', error.message);
+        return [];
+    }
+}
+
+// === RECUPERER LE TITRE VIA TMDB ===
+async function getTitreTMDB(imdbId, type) {
+    try {
+        // Utiliser l'API OMDb (gratuite, pas besoin de clé pour les recherches de base)
+        const response = await axios.get(`https://www.omdbapi.com/`, {
+            params: {
+                i: imdbId,
+                plot: 'short',
+                r: 'json'
+            },
             timeout: 10000
         });
         
-        if (!response.data?.length) return [];
-        
-        return response.data.slice(0, 10).map(item => ({
-            infoHash: item.info_hash,
-            title: item.name,
-            seeders: parseInt(item.seeders) || 0,
-            resolution: extractInfo(item.name).resolution,
-            codec: extractInfo(item.name).codec,
-            hdr: extractInfo(item.name).hdr,
-            magnet: `magnet:?xt=urn:btih:${item.info_hash}&dn=${encodeURIComponent(item.name)}`,
-            provider: 'TPB'
-        }));
-    } catch (error) {
-        console.error('TPB erreur:', error.message);
-        return [];
-    }
-}
-
-// === SOURCE 3: Torrentio via proxy (contourne le 403) ===
-async function searchTorrentioViaProxy(type, imdbId) {
-    try {
-        // Utiliser un User-Agent différent et un proxy
-        const response = await axios.get(
-            `https://torrentio.strem.fun/${type}/${imdbId}.json`,
-            {
-                timeout: 15000,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'application/json',
-                    'Origin': 'https://www.stremio.com',
-                    'Referer': 'https://www.stremio.com/'
-                }
-            }
-        );
-        
-        if (!response.data?.streams?.length) return [];
-        
-        return response.data.streams
-            .filter(s => s.infoHash)
-            .map(s => {
-                const title = s.title || '';
-                const info = extractInfo(title);
-                const seeders = parseInt(s.description?.match(/👤 (\d+)/)?.[1] || '0');
-                
-                return {
-                    infoHash: s.infoHash,
-                    title: title.substring(0, 100),
-                    seeders: seeders,
-                    resolution: info.resolution,
-                    codec: info.codec,
-                    hdr: info.hdr,
-                    magnet: s.url || `magnet:?xt=urn:btih:${s.infoHash}`,
-                    provider: 'Torrentio'
-                };
-            });
-    } catch (error) {
-        console.error('Torrentio proxy erreur:', error.message);
-        return [];
-    }
-}
-
-// === SOURCE 4: 1337x via proxy ===
-async function search1337x(type, imdbId) {
-    try {
-        const response = await axios.get(
-            `https://1337x.to/search/${imdbId}/1/`,
-            { 
-                timeout: 10000,
-                headers: { 'User-Agent': 'Mozilla/5.0' }
-            }
-        );
-        
-        // Parse simple (trouver les liens magnet)
-        const magnetMatches = response.data.match(/magnet:\?xt=urn:btih:([a-fA-F0-9]{40})/g) || [];
-        const sizeMatches = response.data.match(/<td class="coll-4">([^<]+)<\/td>/g) || [];
-        const seederMatches = response.data.match(/<td class="coll-2">(\d+)<\/td>/g) || [];
-        
-        return magnetMatches.slice(0, 10).map((magnet, i) => {
-            const infoHash = magnet.match(/([a-fA-F0-9]{40})/)[1];
+        if (response.data?.Title) {
             return {
-                infoHash: infoHash,
-                title: `${imdbId} - Result ${i+1}`,
-                seeders: parseInt(seederMatches[i]?.match(/\d+/)?.[0] || '0'),
-                resolution: '1080p',
-                codec: 'x264',
-                hdr: 'SDR',
-                magnet: magnet,
-                provider: '1337x'
+                titre: response.data.Title,
+                annee: response.data.Year,
+                type: type
             };
-        });
+        }
+        
+        // Fallback: utiliser l'ID IMDB comme query
+        return { titre: imdbId, annee: '', type: type };
+        
     } catch (error) {
-        console.error('1337x erreur:', error.message);
-        return [];
+        console.error('OMDb erreur:', error.message);
+        return { titre: imdbId, annee: '', type: type };
     }
 }
 
-// === ROUTE PRINCIPALE DES STREAMS ===
+// === ROUTE PRINCIPALE ===
 app.get('/stream/:type/:id.json', async (req, res) => {
     const { type, id } = req.params;
     const cacheKey = `${type}_${id}`;
@@ -221,25 +232,19 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     }
     
     try {
-        // Lancer toutes les recherches en parallèle
-        const [jackettResults, tpbResults, torrentioResults, x1337Results] = await Promise.all([
-            searchJackett(type, id),
-            searchTPB(type, id),
-            searchTorrentioViaProxy(type, id),
-            search1337x(type, id)
+        // Obtenir le titre du film/série
+        const info = await getTitreTMDB(id, type);
+        const query = type === 'movie' ? info.titre : `${info.titre} s01e01`;
+        
+        console.log(`Recherche pour: "${query}"`);
+        
+        // Rechercher sur les sources
+        const [magnetdlResults, solidResults] = await Promise.all([
+            searchMagnetDL(query),
+            searchSolidTorrents(query)
         ]);
         
-        let allTorrents = [
-            ...jackettResults,
-            ...tpbResults,
-            ...torrentioResults,
-            ...x1337Results
-        ];
-        
-        if (allTorrents.length === 0) {
-            console.log('⚠️ Aucun résultat trouvé');
-            return res.json({ streams: [] });
-        }
+        let allTorrents = [...magnetdlResults, ...solidResults];
         
         // Dédupliquer
         const seen = new Map();
@@ -250,22 +255,34 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         });
         const uniqueTorrents = Array.from(seen.values());
         
+        if (uniqueTorrents.length === 0) {
+            console.log('⚠️ Aucun résultat');
+            return res.json({ streams: [] });
+        }
+        
         // Calculer scores et trier
         uniqueTorrents.forEach(t => t.score = calculerScore(t));
         uniqueTorrents.sort((a, b) => b.score - a.score);
         
-        const topTorrents = uniqueTorrents.slice(0, 20);
+        const topTorrents = uniqueTorrents.slice(0, 15);
         
         // Formater pour Stremio
-        const streams = topTorrents.map((t, i) => ({
-            name: 'Go Addon',
-            title: `${i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : ''}${t.resolution} | ${t.codec} | ${t.hdr}\n💚 ${t.seeders} seeds | ⭐${t.score}/100 | 📡 ${t.provider}`,
-            infoHash: t.infoHash,
-            url: t.magnet,
-            behaviorHints: { notWebReady: true }
-        }));
+        const streams = topTorrents.map((t, i) => {
+            let emoji = '';
+            if (i === 0) emoji = '🥇 ';
+            else if (i === 1) emoji = '🥈 ';
+            else if (i === 2) emoji = '🥉 ';
+            
+            return {
+                name: 'Go Addon',
+                title: `${emoji}${t.resolution} | ${t.codec} | ${t.hdr}\n💚 ${t.seeders} seeds | ⭐${t.score}/100 | 📡 ${t.provider}\n📦 ${t.taille || 'N/A'}`,
+                infoHash: t.infoHash,
+                url: t.magnet,
+                behaviorHints: { notWebReady: true }
+            };
+        });
         
-        console.log(`✅ ${streams.length} streams trouvés\n`);
+        console.log(`✅ ${streams.length} streams envoyés\n`);
         
         // Mettre en cache
         cache.set(cacheKey, streams);
@@ -278,37 +295,40 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     }
 });
 
-// Route de test
+// === PAGE DE TEST ===
 app.get('/test', (req, res) => {
     res.send(`
         <!DOCTYPE html>
         <html>
-        <head><title>Test Go Addon</title>
-        <style>
-            body { font-family: Arial; margin: 40px; background: #1a1a2e; color: #fff; }
-            a { color: #4ecdc4; display: block; margin: 10px 0; }
-            .success { color: #4ecdc4; }
-        </style>
+        <head>
+            <title>Test Go Addon</title>
+            <style>
+                body { font-family: Arial; margin: 40px; background: #1a1a2e; color: #fff; }
+                a { color: #4ecdc4; display: block; margin: 10px 0; padding: 10px; background: #16213e; border-radius: 5px; text-decoration: none; }
+                a:hover { background: #0f3460; }
+                .section { margin: 30px 0; }
+            </style>
         </head>
         <body>
-            <h1>🎬 Go Addon - Page de test</h1>
-            <p>Testez les liens ci-dessous :</p>
-            <h3>Films :</h3>
-            <a href="/stream/movie/tt0111161.json">The Shawshank Redemption (tt0111161)</a>
-            <a href="/stream/movie/tt0468569.json">The Dark Knight (tt0468569)</a>
-            <a href="/stream/movie/tt0133093.json">The Matrix (tt0133093)</a>
-            <a href="/stream/movie/tt16431404.json">Your test movie (tt16431404)</a>
-            <h3>Séries :</h3>
-            <a href="/stream/series/tt0944947.json">Game of Thrones (tt0944947)</a>
-            <a href="/stream/series/tt0903747.json">Breaking Bad (tt0903747)</a>
-            <p><a href="/manifest.json">Voir le manifeste</a></p>
+            <h1>🎬 Go Addon - Test</h1>
+            <div class="section">
+                <h3>🔍 Test direct MagnetDL:</h3>
+                <a href="/stream/movie/tt0111161.json">The Shawshank Redemption</a>
+                <a href="/stream/movie/tt0468569.json">The Dark Knight</a>
+                <a href="/stream/series/tt0944947.json">Game of Thrones</a>
+            </div>
+            <p><a href="/manifest.json">📋 Manifeste</a></p>
         </body>
         </html>
     `);
 });
 
+// Route santé Render
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.listen(PORT, () => {
-    console.log(`\n🚀 Go Addon démarré sur le port ${PORT}`);
-    console.log(`📝 Test: http://localhost:${PORT}/test`);
-    console.log(`📋 Manifeste: http://localhost:${PORT}/manifest.json\n`);
+    console.log(`\n🚀 Go Addon v3.0 sur le port ${PORT}`);
+    console.log(`📝 Page de test: http://localhost:${PORT}/test\n`);
 });
