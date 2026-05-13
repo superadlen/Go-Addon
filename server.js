@@ -13,11 +13,12 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.3.3',
+    version: '2.3.4',
     name: 'Link-Dz⚡',
     description: 'Agregateur Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
+    idPrefixes: ['tt', 'tmdb:', 'kitsu'], // 🔥 AJOUTÉ POUR STREMIO
     catalogs: [],
     logo: 'https://i.pinimg.com/1200x/45/26/88/45268878ba1c1123ee8621b2d0081fab.jpg'
 };
@@ -142,19 +143,49 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         })
         .then(response => {
             if (response.data?.streams) {
-                const modified = response.data.streams.map(stream => {
-                    const qualityInfo = getQualityInfo(stream.title || '');
-                    const seeders = getSeeders(stream.title || '');
-                    return {
-                        ...stream,
-                        name: `${source.name}\n${qualityInfo.quality}`,
-                        title: stream.title || `${source.name}`,
-                        description: qualityInfo.extra 
-                            ? `${qualityInfo.extra} | 💚 ${seeders} seeds`
-                            : `💚 ${seeders} seeds`
-                    };
-                });
-                console.log(`✅ ${source.name}: ${modified.length} streams`);
+                const modified = response.data.streams
+                    .map(stream => {
+                        const qualityInfo = getQualityInfo(stream.title || '');
+                        const seeders = getSeeders(stream.title || '');
+                        
+                        // 🔥 ADAPTATION POUR STREMIO : on veut un infoHash ou un magnet valide
+                        let infoHash = stream.infoHash || '';
+                        let url = stream.url || '';
+
+                        // Si le flux n'a ni infoHash ni magnet, on regarde s'il a un lien externe (magnet)
+                        if (!infoHash && !url && stream.externalUrl) {
+                            if (stream.externalUrl.startsWith('magnet:')) {
+                                url = stream.externalUrl;
+                                const match = url.match(/btih:([a-fA-F0-9]{40})/);
+                                if (match) infoHash = match[1].toLowerCase();
+                            }
+                        }
+
+                        // Si on n'a toujours rien, ce flux est inutilisable dans Stremio -> on l'ignore
+                        if (!infoHash && !url) {
+                            return null;
+                        }
+
+                        // Construit le stream formaté pour Stremio
+                        return {
+                            name: `${source.name}\n${qualityInfo.quality}`,
+                            title: stream.title || `${source.name}`,
+                            description: qualityInfo.extra 
+                                ? `${qualityInfo.extra} | 💚 ${seeders} seeds`
+                                : `💚 ${seeders} seeds`,
+                            // Champs obligatoires pour un stream torrent dans Stremio
+                            infoHash: infoHash,
+                            url: url || (infoHash ? `magnet:?xt=urn:btih:${infoHash}` : ''),
+                            // Indispensable pour que Stremio le traite comme un torrent
+                            behaviorHints: {
+                                notWebReady: true,
+                                bingeGroup: `${source.name}`
+                            }
+                        };
+                    })
+                    .filter(stream => stream !== null); // retire les flux invalides
+                
+                console.log(`✅ ${source.name}: ${modified.length} streams utilisables`);
                 return modified;
             }
             return [];
@@ -167,6 +198,17 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     
     const results = await Promise.all(promises);
     allStreams = results.flat();
+    
+    // Déduplication par infoHash (évite les doublons)
+    const seen = new Set();
+    allStreams = allStreams.filter(s => {
+        const key = s.infoHash || s.url;
+        if (key && !seen.has(key)) {
+            seen.add(key);
+            return true;
+        }
+        return false;
+    });
     
     // Trier par qualité puis seeders
     allStreams.sort((a, b) => {
