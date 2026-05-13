@@ -10,7 +10,7 @@ const cache = new NodeCache({ stdTTL: 1800, checkperiod: 120 });
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.1.0',
+    version: '2.2.0',
     name: 'Link-Dz 🌟',
     description: 'Agregateur Multi-Sources - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -39,27 +39,64 @@ const SOURCES = [
     }
 ];
 
-function getQualityScore(title) {
+function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
-    let score = 0;
-    let label = '';
+    let quality = '';
+    let extra = [];
     
-    if (t.includes('4k') || t.includes('2160p')) { score = 8; label = '4K'; }
-    else if (t.includes('1080p')) { score = 6; label = '1080p'; }
-    else if (t.includes('720p')) { score = 4; label = '720p'; }
-    else if (t.includes('480p')) { score = 2; label = '480p'; }
-    else { score = 3; label = 'HD'; }
+    // Résolution
+    if (t.includes('2160p') || t.includes('4k') || t.includes('uhd')) quality = '🎬 4K';
+    else if (t.includes('1440p') || t.includes('2k')) quality = '📺 2K';
+    else if (t.includes('1080p') || t.includes('fhd')) quality = '📺 1080p';
+    else if (t.includes('720p') || t.includes('hd')) quality = '🖥️ 720p';
+    else if (t.includes('480p') || t.includes('sd')) quality = '📱 480p';
+    else quality = '🎥 HD';
     
-    if (t.includes('bluray') || t.includes('remux')) { score += 2; label += ' BluRay'; }
-    if (t.includes('dolby') || t.includes('atmos')) { score += 1; label += ' Atmos'; }
-    if (t.includes('hevc') || t.includes('x265')) { score += 1; label += ' HEVC'; }
+    // Type de source
+    if (t.includes('bluray') || t.includes('bdrip')) extra.push('BluRay');
+    if (t.includes('remux')) extra.push('REMUX');
+    if (t.includes('web-dl') || t.includes('webdl')) extra.push('WEB-DL');
+    if (t.includes('webrip')) extra.push('WEBRip');
+    if (t.includes('hdtv')) extra.push('HDTV');
     
-    return { score, label };
+    // HDR
+    if (t.includes('dolby vision') || t.includes('dv')) extra.push('DV');
+    else if (t.includes('hdr10+')) extra.push('HDR10+');
+    else if (t.includes('hdr')) extra.push('HDR');
+    
+    // Codec
+    if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
+    else if (t.includes('av1')) extra.push('AV1');
+    
+    // Audio
+    if (t.includes('atmos')) extra.push('Atmos');
+    else if (t.includes('dts')) extra.push('DTS');
+    
+    return {
+        quality: quality,
+        extra: extra.join(' • ')
+    };
 }
 
 function getSeeders(title) {
     const match = (title || '').match(/👤\s*(\d+)/);
     return match ? parseInt(match[1]) : 0;
+}
+
+function getQualityScore(title) {
+    const t = (title || '').toLowerCase();
+    let score = 0;
+    
+    if (t.includes('4k') || t.includes('2160p')) score = 8;
+    else if (t.includes('1080p')) score = 6;
+    else if (t.includes('720p')) score = 4;
+    else score = 3;
+    
+    if (t.includes('bluray') || t.includes('remux')) score += 2;
+    if (t.includes('hevc') || t.includes('x265')) score += 1;
+    if (t.includes('dolby') || t.includes('atmos')) score += 1;
+    
+    return score;
 }
 
 // Routes
@@ -77,7 +114,6 @@ app.get('/', (req, res) => {
                 .btn { background:#e94560; color:white; padding:15px 30px; border-radius:5px; text-decoration:none; font-weight:bold; display:inline-block; margin:20px 0; }
                 .sources { text-align:left; margin:20px 0; padding:15px; background:#16213e; border-radius:10px; }
                 .source { padding:5px 0; border-bottom:1px solid #303056; }
-                .source:last-child { border-bottom:none; }
             </style>
         </head>
         <body>
@@ -85,12 +121,12 @@ app.get('/', (req, res) => {
                 <h1>🌟 Link-Dz Addon</h1>
                 <p>Agrégateur Multi-Sources</p>
                 <div class="sources">
-                    <strong>📡 Sources disponibles :</strong>
+                    <strong>📡 Sources :</strong>
                     ${SOURCES.map(s => `<div class="source">• ${s.name}</div>`).join('')}
                 </div>
-                <a href="stremio://${req.get('host')}/manifest.json" class="btn">🚀 Installer dans Stremio</a>
-                <p style="color:#888;font-size:12px;">URL: ${url}</p>
-                <p style="color:#666;font-size:12px;">By Superadlen DZ 🇩🇿</p>
+                <a href="stremio://${req.get('host')}/manifest.json" class="btn">🚀 Installer</a>
+                <p style="color:#888;font-size:12px;">${url}</p>
+                <p style="color:#666;">By Superadlen DZ 🇩🇿</p>
             </div>
         </body>
         </html>
@@ -116,11 +152,19 @@ app.get('/stream/:type/:id.json', async (req, res) => {
             });
             
             if (response.data?.streams) {
-                // Remplacer le nom par le nom personnalisé
-                const modified = response.data.streams.map(stream => ({
-                    ...stream,
-                    name: `📡 ${source.name}`  // Nom personnalisé
-                }));
+                const modified = response.data.streams.map(stream => {
+                    const qualityInfo = getQualityInfo(stream.title || '');
+                    const seeders = getSeeders(stream.title || '');
+                    
+                    return {
+                        ...stream,
+                        name: `${source.name}\n${qualityInfo.quality}`,  // Nom + Qualité
+                        title: stream.title || `${source.name}`,
+                        description: qualityInfo.extra 
+                            ? `${qualityInfo.extra} | 💚 ${seeders} seeds`
+                            : `💚 ${seeders} seeds`
+                    };
+                });
                 
                 console.log(`✅ ${source.name}: ${modified.length} streams`);
                 allStreams = [...allStreams, ...modified];
@@ -134,7 +178,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     allStreams.sort((a, b) => {
         const qA = getQualityScore(a.title);
         const qB = getQualityScore(b.title);
-        if (qB.score !== qA.score) return qB.score - qA.score;
+        if (qB !== qA) return qB - qA;
         return getSeeders(b.title) - getSeeders(a.title);
     });
     
@@ -146,6 +190,6 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log('🚀 Link-Dz Addon démarré');
-    console.log(`📡 ${SOURCES.length} sources configurées:`);
+    console.log('📡 Sources configurées:');
     SOURCES.forEach(s => console.log(`   • ${s.name}`));
 });
