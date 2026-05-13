@@ -6,17 +6,14 @@ const NodeCache = require('node-cache');
 const app = express();
 app.use(cors());
 
-// Cache de 30 minutes
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 120 });
-
-// ⏱️ Timeout 7 secondes
 const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.3.5', // Version incrémentée pour forcer la mise à jour Stremio
+    version: '2.3.6', 
     name: 'Link-Dz⚡',
-    description: 'Agregateur Multi-Sources Rapide - Films & Series By Superadlen DZ',
+    description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
     idPrefixes: ['tt', 'tmdb:', 'kitsu'],
@@ -35,22 +32,29 @@ function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
+    let lang = '🌐'; // Symbole par défaut
+
+    // Détection de la langue
+    if (t.includes('multi') || (t.includes('fr') && t.includes('en'))) lang = '🇫🇷/🇺🇸';
+    else if (t.includes('french') || t.includes(' vff ') || t.includes(' vf ')) lang = '🇫🇷 FR';
+    else if (t.includes('vostfr')) lang = '🇫🇷 VOST';
+    else if (t.includes('english') || t.includes(' en ') || t.includes(' eng ')) lang = '🇺🇸 EN';
+    else if (t.includes('ita')) lang = '🇮🇹 ITA';
+    else if (t.includes('spa')) lang = '🇪🇸 SPA';
     
-    if (t.includes('2160p') || t.includes('4k') || t.includes('uhd')) quality = '🎬 4K';
-    else if (t.includes('1440p') || t.includes('2k')) quality = '📺 2K';
-    else if (t.includes('1080p') || t.includes('fhd')) quality = '📺 1080p';
-    else if (t.includes('720p') || t.includes('hd')) quality = '🖥️ 720p';
-    else if (t.includes('480p') || t.includes('sd')) quality = '📱 480p';
+    // Qualité
+    if (t.includes('2160p') || t.includes('4k')) quality = '🎬 4K';
+    else if (t.includes('1080p')) quality = '📺 1080p';
+    else if (t.includes('720p')) quality = '🖥️ 720p';
     else if (t.includes('cam')) quality = '📱 CAM';
     else quality = '🎥 HD';
     
+    // Formats
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('BluRay');
-    if (t.includes('remux')) extra.push('REMUX');
-    if (t.includes('web-dl') || t.includes('webdl')) extra.push('WEB-DL');
-    if (t.includes('hevc') || t.includes('x265')) extra.push('📽️HEVC');
-    if (t.includes('atmos')) extra.push('🎧Atmos');
+    if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
+    if (t.includes('10bit')) extra.push('10bit');
     
-    return { quality, extra: extra.join(' • ') };
+    return { quality, extra: extra.join(' • '), lang };
 }
 
 function getSeeders(title) {
@@ -61,56 +65,46 @@ function getSeeders(title) {
 function getQualityScore(title) {
     const t = (title || '').toLowerCase();
     let score = 0;
-    if (t.includes('4k') || t.includes('2160p')) score = 8;
-    else if (t.includes('1080p')) score = 6;
-    else if (t.includes('720p')) score = 4;
-    else score = 3;
-    if (t.includes('bluray')) score += 2;
+    if (t.includes('4k')) score = 10;
+    else if (t.includes('1080p')) score = 7;
+    else if (t.includes('720p')) score = 5;
+    if (t.includes('french') || t.includes('vf')) score += 2;
     return score;
 }
 
-// Route Manifest avec Header Correct
 app.get('/manifest.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(MANIFEST);
 });
 
 app.get('/', (req, res) => {
-    res.send(`
-        <body style="background:#0f0f1a; color:white; font-family:sans-serif; text-align:center; padding:50px;">
-            <div style="background:#1a1a2e; padding:30px; border-radius:15px; max-width:500px; margin:0 auto; border:1px solid #303056;">
-                <h1 style="color:#e94560;">⚡ Link-Dz Addon</h1>
-                <p>Agrégateur Multi-Sources pour Stremio</p>
-                <a href="stremio://${req.get('host')}/manifest.json" style="background:#e94560; color:white; padding:15px 30px; border-radius:5px; text-decoration:none; font-weight:bold; display:inline-block; margin:20px 0;">🚀 Installer sur Stremio</a>
-                <p style="color:#666;">By Superadlen DZ 🇩🇿</p>
-            </div>
-        </body>
-    `);
+    res.send(`<body style="background:#0f0f1a;color:white;text-align:center;padding:50px;font-family:sans-serif;">
+        <div style="background:#1a1a2e;padding:30px;border-radius:15px;max-width:500px;margin:0 auto;border:1px solid #303056;">
+            <h1 style="color:#e94560;">⚡ Link-Dz Addon</h1>
+            <p>Langues & Qualités optimisées</p>
+            <a href="stremio://${req.get('host')}/manifest.json" style="background:#e94560;color:white;padding:15px 30px;border-radius:5px;text-decoration:none;font-weight:bold;display:inline-block;margin:20px 0;">🚀 Installer</a>
+        </div>
+    </body>`);
 });
 
 app.get('/stream/:type/:id.json', async (req, res) => {
     const { type, id } = req.params;
     const cacheKey = `${type}-${id}`;
-    
     const cached = cache.get(cacheKey);
     if (cached) return res.json(cached);
     
-    console.log(`🔍 Recherche: ${type} ${id}`);
+    console.log(`🔍 Scan: ${type} ${id}`);
     
     const promises = SOURCES.map(source => 
-        axios.get(`${source.url}/stream/${type}/${id}.json`, {
-            timeout: TIMEOUT,
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        })
+        axios.get(`${source.url}/stream/${type}/${id}.json`, { timeout: TIMEOUT, headers: { 'User-Agent': 'Mozilla/5.0' } })
         .then(response => {
             if (response.data?.streams) {
                 return response.data.streams.map(stream => {
-                    const qInfo = getQualityInfo(stream.title || '');
+                    const info = getQualityInfo(stream.title || '');
                     const seeds = getSeeders(stream.title || '');
                     
-                    // Extraction et nettoyage de l'infoHash
                     let infoHash = stream.infoHash || '';
-                    if (!infoHash && stream.url && stream.url.startsWith('magnet:')) {
+                    if (!infoHash && stream.url?.startsWith('magnet:')) {
                         const match = stream.url.match(/btih:([a-fA-F0-9]{40})/);
                         if (match) infoHash = match[1];
                     }
@@ -118,14 +112,16 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     if (!infoHash && !stream.url) return null;
 
                     return {
-                        name: `${source.name}\n${qInfo.quality}`,
-                        title: `${stream.title || source.name}\n👤 Seeds: ${seeds} | ${qInfo.extra}`,
+                        // On affiche : Nom Source | Langue | Qualité
+                        name: `${source.name}\n${info.lang} ${info.quality}`,
+                        
+                        // Titre nettoyé : on ne met plus le titre brut original
+                        // Mais seulement les seeds et le format technique
+                        title: `👤 Seeds: ${seeds} | ${info.extra || 'Standard'}`,
+                        
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
-                        behaviorHints: {
-                            notWebReady: true,
-                            bingeGroup: `link-dz-${source.name}`
-                        }
+                        behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
                     };
                 }).filter(s => s !== null);
             }
@@ -137,23 +133,17 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     const results = await Promise.all(promises);
     let allStreams = results.flat();
     
-    // Déduplication
     const seen = new Set();
     allStreams = allStreams.filter(s => {
         const key = s.infoHash || s.url;
-        if (key && !seen.has(key)) {
-            seen.add(key);
-            return true;
-        }
+        if (key && !seen.has(key)) { seen.add(key); return true; }
         return false;
     });
     
-    // Tri
     allStreams.sort((a, b) => {
-        const qA = getQualityScore(a.name + a.title);
-        const qB = getQualityScore(b.name + b.title);
-        if (qB !== qA) return qB - qA;
-        return getSeeders(b.title) - getSeeders(a.title);
+        const scoreA = getQualityScore(a.name);
+        const scoreB = getQualityScore(b.name);
+        return scoreB - scoreA;
     });
     
     const result = { streams: allStreams.slice(0, 40) };
@@ -162,4 +152,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz prêt sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.3.5 Online`));
