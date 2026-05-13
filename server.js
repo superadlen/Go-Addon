@@ -30,7 +30,7 @@ const SOURCES = [
 
 function getFileSize(title) {
     const match = (title || '').match(/(\d+(?:\.\d+)?\s*(?:GB|MB|GiB|MiB))/i);
-    return match ? `💾:${match[0].toUpperCase()}` : '💾:N/A';
+    return match ? `💾= ${match[0].toUpperCase()}` : '💾= N/A';
 }
 
 function getSeeders(title) {
@@ -40,8 +40,8 @@ function getSeeders(title) {
 
 function getQualityScore(text) {
     const t = (text || '').toLowerCase();
-    if (t.includes('4k') || t.includes('2160p')) return 10;
-    if (t.includes('1080p')) return 7;
+    if (t.includes('1080p')) return 10;
+    if (t.includes('4k') || t.includes('2160p')) return 7;
     if (t.includes('720p')) return 5;
     return 1;
 }
@@ -176,7 +176,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
                     sourceStreams.push({
                         name: `${source.name}\n${info.quality.split(':')[1]}`,
-                        title: `${size} | ${info.quality}\n👤:${seedsCount}\n${info.lang}\n${info.extra || '📦Standard'}`,
+                        title: `${size} | ${info.quality}\n👤= ${seedsCount}\n${info.lang}\n$⚙️= {info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
