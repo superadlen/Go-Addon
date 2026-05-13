@@ -1,7 +1,7 @@
 {
-  "name": "stremio-torrent-addon",
-  "version": "1.0.0",
-  "description": "Addon Stremio qui agrège les torrents avec scoring de qualité",
+  "name": "go-addon",
+  "version": "2.0.0",
+  "description": "Go-Link - Agregateur Multi-Sources pour Stremio",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +10,11 @@
     "axios": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "node-cache": "^5.1.2",
-    "stremio-addon-sdk": "^1.6.10"
-  }
+    "node-cache": "^5.1.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Superadlen DZ",
+  "license": "MIT"
 }
