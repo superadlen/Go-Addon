@@ -40,8 +40,8 @@ function getSeeders(title) {
 
 function getQualityScore(text) {
     const t = (text || '').toLowerCase();
-    if (t.includes('4k') || t.includes('2160p')) return 10;
-    if (t.includes('1080p')) return 7;
+    if (t.includes('1080p')) return 10;
+    if (t.includes('4k') || t.includes('2160p')) return 7;
     if (t.includes('720p')) return 5;
     return 1;
 }
