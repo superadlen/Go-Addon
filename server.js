@@ -106,11 +106,11 @@ function getQualityInfo(title) {
         lang = `🗣️🔉= ${languages[code].flag}${suffix}`;
     }
 
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
-    else if (t.includes('1080p')) quality = '📺:1080p';
-    else if (t.includes('720p')) quality = '🖥️:720p';
-    else if (t.includes('cam')) quality = '📱:CAM';
-    else quality = '🎥:HD';
+    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:=4K';
+    else if (t.includes('1080p')) quality = '📺:=1080p';
+    else if (t.includes('720p')) quality = '🖥️:= 720p';
+    else if (t.includes('cam')) quality = '📱:=CAM';
+    else quality = '🎥:=HD';
 
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
