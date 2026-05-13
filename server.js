@@ -200,12 +200,20 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     });
     
     // Tri
-    allStreams.sort((a, b) => {
-        const qA = getQualityScore(a.name + a.title);
-        const qB = getQualityScore(b.name + b.title);
-        if (qB !== qA) return qB - qA;
-        return getSeeders(b.title) - getSeeders(a.title);
-    });
+allStreams.sort((a, b) => {
+    const aText = (a.name + ' ' + a.title).toLowerCase();
+    const bText = (b.name + ' ' + b.title).toLowerCase();
+
+    const qA = getQualityScore(aText);
+    const qB = getQualityScore(bText);
+
+    if (qB !== qA) return qB - qA;
+
+    const sA = getSeeders(a.title);
+    const sB = getSeeders(b.title);
+
+    return sB - sA;
+});
     
     const result = { streams: allStreams.slice(0, 40) };
     cache.set(cacheKey, result);
