@@ -11,8 +11,8 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.0', 
-    name: 'Link-Dz⚡',
+    version: '2.5.1', 
+    name: '🧲Link-Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
@@ -40,8 +40,8 @@ function getSeeders(title) {
 
 function getQualityScore(text) {
     const t = (text || '').toLowerCase();
-    if (t.includes('1080p')) return 10;
-    if (t.includes('4k') || t.includes('2160p')) return 7;
+    if (t.includes('4k') || t.includes('2160p')) return 10;
+    if (t.includes('1080p')) return 7;
     if (t.includes('720p')) return 5;
     return 1;
 }
@@ -52,7 +52,6 @@ function getQualityInfo(title) {
     let extra = [];
     let lang = '🗣️: ❓🎧';
 
-    // 40 langues
     const languages = {
         fr: { flag: '🇫🇷', names: ['french', ' vf ', ' vff ', 'francais'], label: 'VF' },
         en: { flag: '🇺🇸', names: ['english', ' en ', ' eng ', 'anglais'], label: 'VO' },
@@ -89,12 +88,10 @@ function getQualityInfo(title) {
         te: { flag: '🇮🇳', names: ['telugu', ' te ', ' tel '] }
     };
 
-    // Détection
     const found = Object.entries(languages)
         .filter(([code, data]) => t.includes(code) || data.names.some(name => t.includes(name)))
         .map(([code]) => code);
 
-    // Affichage selon le nombre trouvé
     if (found.length >= 5) {
         const flags = found.slice(0, 5).map(code => languages[code].flag).join('/');
         lang = `🗣️🔉: ${flags} `;
@@ -109,14 +106,12 @@ function getQualityInfo(title) {
         lang = `🗣️🔉: ${languages[code].flag}${suffix}`;
     }
 
-    // --- DÉTECTION QUALITÉ ---
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
     else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
     else if (t.includes('cam')) quality = '📱:CAM';
     else quality = '🎥:HD';
 
-    // --- TOUS LES EXTRAS ---
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
@@ -125,22 +120,17 @@ function getQualityInfo(title) {
     if (t.includes('hdrip')) extra.push('🎞️HDRip');
     if (t.includes('uhd')) extra.push('🖥️UHD');
     if (t.includes('amzn')) extra.push('🛒AMZN');
-
     if (t.includes('hevc') || t.includes('x265') || t.includes('h265')) extra.push('HEVC');
     if (t.includes('x264')) extra.push('X264');
     if (t.includes('10bit')) extra.push('🎨10BIT');
-
     if (t.includes('hdr10')) extra.push('💯HDR10');
     else if (t.includes('hdr')) extra.push('✨HDR');
-
     if (t.includes('dolby vision') || t.includes(' dv ') || t.includes('.dv.')) extra.push('🌈DV');
-
     if (t.includes('atmos')) extra.push('🎧Atmos');
     if (t.includes('ddp5') || t.includes('ddp5.1')) extra.push('🔊DDP5.1');
     if (t.includes('truehd')) extra.push('🎵TrueHD');
     if (t.includes('dts')) extra.push('🔊DTS');
     if (t.includes('aac')) extra.push('🔉AAC');
-
     if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬SUB');
     if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
     if (t.includes('proper')) extra.push('✅PROPER');
@@ -164,8 +154,16 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         axios.get(`${source.url}/stream/${type}/${id}.json`, { timeout: TIMEOUT, headers: { 'User-Agent': 'Mozilla/5.0' } })
         .then(response => {
             if (response.data?.streams) {
-                return response.data.streams.map(stream => {
+                let sourceStreams = [];
+                let qualityCount = {}; // Pour limiter à 5 par qualité
+
+                for (const stream of response.data.streams) {
                     const info = getQualityInfo(stream.title || '');
+                    
+                    // Limite : 5 par qualité
+                    qualityCount[info.quality] = (qualityCount[info.quality] || 0) + 1;
+                    if (qualityCount[info.quality] > 5) continue;
+
                     const size = getFileSize(stream.title || '');
                     const seedsCount = getSeeders(stream.title || '');
                     
@@ -174,22 +172,20 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                         const match = stream.url.match(/btih:([a-fA-F0-9]{40})/);
                         if (match) infoHash = match[1];
                     }
-                    
-                    if (!infoHash && !stream.url) return null;
+                    if (!infoHash && !stream.url) continue;
 
-                    const line1 = `${size} | ${info.quality}`; 
-                    const line2 = `👤:${seedsCount}`;                  
-                    const line3 = `${info.lang}`;               
-                    const line4 = `${info.extra || '📦Standard'}`; 
-
-                    return {
+                    sourceStreams.push({
                         name: `${source.name}\n${info.quality.split(':')[1]}`,
-                        title: `${line1}\n${line2}\n${line3}\n${line4}`,
+                        title: `${size} | ${info.quality}\n👤:${seedsCount}\n${info.lang}\n${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
-                    };
-                }).filter(s => s !== null);
+                    });
+
+                    // Limite : 15 par source
+                    if (sourceStreams.length >= 15) break;
+                }
+                return sourceStreams;
             }
             return [];
         })
@@ -206,7 +202,6 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
-    // --- NOUVEAU TRI INJECTÉ ---
     allStreams.sort((a, b) => {
         const qA = getQualityScore(a.name + a.title);
         const qB = getQualityScore(b.name + b.title);
@@ -214,10 +209,10 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return getSeeders(b.title) - getSeeders(a.title);
     });
     
-    const result = { streams: allStreams.slice(0, 40) };
+    const result = { streams: allStreams };
     cache.set(cacheKey, result);
     res.json(result);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.9 Online`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.5.0 Online`));
