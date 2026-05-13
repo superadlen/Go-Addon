@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.4.8', 
+    version: '2.4.9', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -42,7 +42,7 @@ function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
-    let lang = '🗣️:🎧';
+    let lang = '🗣️: ❓🎧';
 
     // 40 langues
     const languages = {
@@ -89,16 +89,16 @@ function getQualityInfo(title) {
     // Affichage selon le nombre trouvé
     if (found.length >= 5) {
         const flags = found.slice(0, 5).map(code => languages[code].flag).join('/');
-        lang = `🗣️:${flags} 🎶`;
+        lang = `🗣️🔉: ${flags} `;
     } else if (found.length >= 2) {
         const flags = found.map(code => languages[code].flag).join('/');
-        lang = `🗣️:${flags} 🎶`;
+        lang = `🗣️🔉: ${flags} `;
     } else if (t.includes('multi')) {
-        lang = '🗣️:🌍 MULTI 🎶';
+        lang = '🗣️🔉: 🌍 MULTI ';
     } else if (found.length === 1) {
         const code = found[0];
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
-        lang = `🗣️:${languages[code].flag}${suffix}`;
+        lang = `🗣️🔉: ${languages[code].flag}${suffix}`;
     }
 
     // --- DÉTECTION QUALITÉ ---
