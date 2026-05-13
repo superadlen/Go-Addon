@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.4.9', 
+    version: '2.5.0', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -35,7 +35,15 @@ function getFileSize(title) {
 
 function getSeeders(title) {
     const match = (title || '').match(/👤\s*(\d+)/);
-    return match ? `👤:${match[1]}` : '👤:0';
+    return match ? parseInt(match[1]) : 0;
+}
+
+function getQualityScore(text) {
+    const t = (text || '').toLowerCase();
+    if (t.includes('4k') || t.includes('2160p')) return 10;
+    if (t.includes('1080p')) return 7;
+    if (t.includes('720p')) return 5;
+    return 1;
 }
 
 function getQualityInfo(title) {
@@ -108,7 +116,7 @@ function getQualityInfo(title) {
     else if (t.includes('cam')) quality = '📱:CAM';
     else quality = '🎥:HD';
 
-    // --- TOUS LES EXTRAS (RÉINSÉRÉS) ---
+    // --- TOUS LES EXTRAS ---
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
@@ -159,7 +167,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                 return response.data.streams.map(stream => {
                     const info = getQualityInfo(stream.title || '');
                     const size = getFileSize(stream.title || '');
-                    const seeds = getSeeders(stream.title || '');
+                    const seedsCount = getSeeders(stream.title || '');
                     
                     let infoHash = stream.infoHash || '';
                     if (!infoHash && stream.url?.startsWith('magnet:')) {
@@ -169,9 +177,8 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     
                     if (!infoHash && !stream.url) return null;
 
-                    // --- STRUCTURE 4 LIGNES ---
                     const line1 = `${size} | ${info.quality}`; 
-                    const line2 = `${seeds}`;                  
+                    const line2 = `👤:${seedsCount}`;                  
                     const line3 = `${info.lang}`;               
                     const line4 = `${info.extra || '📦Standard'}`; 
 
@@ -199,14 +206,12 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
+    // --- NOUVEAU TRI INJECTÉ ---
     allStreams.sort((a, b) => {
-        const getScore = (name) => {
-            if (name.includes('4K')) return 10;
-            if (name.includes('1080p')) return 7;
-            if (name.includes('720p')) return 5;
-            return 1;
-        };
-        return getScore(b.name) - getScore(a.name);
+        const qA = getQualityScore(a.name + a.title);
+        const qB = getQualityScore(b.name + b.title);
+        if (qB !== qA) return qB - qA;
+        return getSeeders(b.title) - getSeeders(a.title);
     });
     
     const result = { streams: allStreams.slice(0, 40) };
@@ -215,4 +220,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.7 Online`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.9 Online`));
