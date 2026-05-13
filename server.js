@@ -61,12 +61,6 @@ function getQualityInfo(title) {
         const flag = { fr: '🇫🇷', en: '🇺🇸', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', ru: '🇷🇺' }[code];
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
         lang = `🗣️:${flag}${suffix}`;
-    }
-
-    // ... votre code existant pour quality et extra ...
-
-    return { quality, extra, lang };
-}
     
     // Qualité
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬: 4K';
