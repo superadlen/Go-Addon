@@ -22,10 +22,10 @@ const MANIFEST = {
 };
 
 const SOURCES = [
-    { url: 'https://filmora-production.up.railway.app', name: 'Max' },
-    { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Ultra' },
-    { url: 'https://str.zmb.lat/lite', name: 'Link-Dz Pro' },
-    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Plus+' }
+    { url: 'https://filmora-production.up.railway.app', name: 'Link2' },
+    { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Link1' },
+    { url: 'https://str.zmb.lat/lite', name: 'Link3' },
+    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Link4' }
 ];
 
 function getFileSize(title) {
@@ -176,7 +176,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
                     sourceStreams.push({
                         name: `${source.name} | ${info.quality.split(':')[1]}`,
-                        title: `${size} | \n👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
+                        title: `${size}  \n👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
