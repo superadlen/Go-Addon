@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.4.5', 
+    version: '2.4.7', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -44,7 +44,7 @@ function getQualityInfo(title) {
     let extra = [];
     let lang = '🗣️:🎧';
 
-    // Logique de Langues
+    // --- LOGIQUE DE LANGUES ---
     const languages = {
         fr: { code: 'fr', flag: '🇫🇷', names: ['french', ' vf ', ' vff '], label: 'VF' },
         en: { code: 'en', flag: '🇺🇸', names: ['english', ' en ', ' eng '], label: 'VO' },
@@ -71,14 +71,14 @@ function getQualityInfo(title) {
         lang = `🗣️:${flag}${suffix}`;
     }
 
-    // Qualité
+    // --- DÉTECTION QUALITÉ ---
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
     else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
     else if (t.includes('cam')) quality = '📱:CAM';
     else quality = '🎥:HD';
 
-    // Formats techniques
+    // --- TOUS LES EXTRAS (RÉINSÉRÉS) ---
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
@@ -107,22 +107,13 @@ function getQualityInfo(title) {
     if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
     if (t.includes('proper')) extra.push('✅PROPER');
     if (t.includes('repack')) extra.push('♻️REPACK');
+
     return { quality, extra: extra.join('|'), lang };
 }
 
 app.get('/manifest.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(MANIFEST);
-});
-
-app.get('/', (req, res) => {
-    res.send(`<body style="background:#0f0f1a;color:white;text-align:center;padding:50px;font-family:sans-serif;">
-        <div style="background:#1a1a2e;padding:30px;border-radius:15px;max-width:500px;margin:0 auto;border:1px solid #303056;">
-            <h1 style="color:#e94560;">⚡ Link-Dz Addon</h1>
-            <p>V2.4.5 - Infos structurées (3 lignes)</p>
-            <a href="stremio://${req.get('host')}/manifest.json" style="background:#e94560;color:white;padding:15px 30px;border-radius:5px;text-decoration:none;font-weight:bold;display:inline-block;margin:20px 0;">🚀 Installer</a>
-        </div>
-    </body>`);
 });
 
 app.get('/stream/:type/:id.json', async (req, res) => {
@@ -148,14 +139,15 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     
                     if (!infoHash && !stream.url) return null;
 
-                    // Organisation en 3 lignes pour le survol (title)
-                    const line1 = `${size} | ${seeds}`;
-                    const line2 = `${info.lang} | ${info.quality}`;
-                    const line3 = `${info.extra || 'Standard'}`;
+                    // --- STRUCTURE 4 LIGNES ---
+                    const line1 = `${size} | ${info.quality}`; 
+                    const line2 = `${seeds}`;                  
+                    const line3 = `${info.lang}`;               
+                    const line4 = `${info.extra || '📦Standard'}`; 
 
                     return {
                         name: `${source.name}\n${info.quality.split(':')[1]}`,
-                        title: `${line1}\n${line2}\n${line3}`,
+                        title: `${line1}\n${line2}\n${line3}\n${line4}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
@@ -193,4 +185,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.5 Online`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.7 Online`));
