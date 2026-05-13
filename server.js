@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.4.0', 
+    version: '2.4.1', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -52,49 +52,49 @@ else if (t.includes('korean') || t.includes(' kr ') || t.includes(' kor ')) lang
 else if (t.includes('chinese') || t.includes(' cn ') || t.includes(' chi ')) lang = '🔉🇨🇳 CN';
     
     // Qualité
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬 4K';
-    else if (t.includes('1080p')) quality = '📺 1080p';
-    else if (t.includes('720p')) quality = '🖥️ 720p';
-    else if (t.includes('cam')) quality = '📱 CAM';
-    else quality = '🎥 HD';
+    if (t.includes('2160p') || t.includes('4k')) quality = '🎬: 4K';
+    else if (t.includes('1080p')) quality = '📺: 1080p';
+    else if (t.includes('720p')) quality = '🖥️: 720p';
+    else if (t.includes('cam')) quality = '📱: CAM';
+    else quality = '🎥: HD';
     
     // Formats
-    if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿 BluRay');
+    if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
 if (t.includes('remux')) extra.push('📀 REMUX');
-if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐 WEB-DL');
-if (t.includes('webrip')) extra.push('🌍 WEBRip');
-if (t.includes('dvdrip')) extra.push('📼 DVDRip');
-if (t.includes('hdrip')) extra.push('🎞️ HDRip');
-if (t.includes('uhd')) extra.push('🖥️ UHD');
+if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
+if (t.includes('webrip')) extra.push('🌍WEBRip');
+if (t.includes('dvdrip')) extra.push('📼DVDRip');
+if (t.includes('hdrip')) extra.push('🎞️HDRip');
+if (t.includes('uhd')) extra.push('🖥️UHD');
 if (t.includes('4k')) extra.push('4️⃣K');
-if (t.includes('2160p')) extra.push('2160p');
-if (t.includes('1080p')) extra.push('1080p');
-if (t.includes('720p')) extra.push('720p');
-if (t.includes('480p')) extra.push('480p');
+if (t.includes('2160p')) extra.push('UHD');
+if (t.includes('1080p')) extra.push('FHD');
+if (t.includes('720p')) extra.push('HD');
+if (t.includes('480p')) extra.push('SD');
 
-if (t.includes('hevc') || t.includes('x265')) extra.push('📽️ HEVC');
-if (t.includes('x264')) extra.push('🎬 x264');
+if (t.includes('hevc') || t.includes('x265')) extra.push('📽️HEVC');
+if (t.includes('x264')) extra.push('🎬x264');
 
-if (t.includes('hdr')) extra.push('✨ HDR');
-if (t.includes('hdr10')) extra.push('✨ HDR10');
-if (t.includes('dolby vision') || t.includes('dv')) extra.push('🌈 Dolby Vision');
+if (t.includes('hdr')) extra.push('✨HDR');
+if (t.includes('hdr10')) extra.push('✨HDR10');
+if (t.includes('dolby vision') || t.includes('dv')) extra.push('🌈Dolby Vision');
 
-if (t.includes('atmos')) extra.push('🎧 Atmos');
-if (t.includes('dts')) extra.push('🔊 DTS');
-if (t.includes('aac')) extra.push('🔉 AAC');
-if (t.includes('truehd')) extra.push('🎵 TrueHD');
+if (t.includes('atmos')) extra.push('🎧Atmos');
+if (t.includes('dts')) extra.push('🔊DTS');
+if (t.includes('aac')) extra.push('🔉AAC');
+if (t.includes('truehd')) extra.push('🎵TrueHD');
 
-if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬 SUB');
-if (t.includes('softsub')) extra.push('📝 SoftSub');
-if (t.includes('hardsub')) extra.push('📌 HardSub');
+if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬SUB');
+if (t.includes('softsub')) extra.push('📝SoftSub');
+if (t.includes('hardsub')) extra.push('📌HardSub');
 
-if (t.includes('dub') || t.includes('dubbed')) extra.push('🎙️ DUB');
-if (t.includes('dual audio')) extra.push('🎚️ Dual Audio');
+if (t.includes('dub') || t.includes('dubbed')) extra.push('🎙️DUB');
+if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
 
-if (t.includes('proper')) extra.push('✅ PROPER');
-if (t.includes('repack')) extra.push('♻️ REPACK');
-if (t.includes('extended')) extra.push('🧩 EXTENDED');
-if (t.includes('uncut')) extra.push('✂️ UNCUT');
+if (t.includes('proper')) extra.push('✅PROPER');
+if (t.includes('repack')) extra.push('♻️REPACK');
+if (t.includes('extended')) extra.push('🧩EXTENDED');
+if (t.includes('uncut')) extra.push('✂️UNCUT');
     
     return { quality, extra: extra.join('|'), lang };
 }
