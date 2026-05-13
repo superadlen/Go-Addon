@@ -13,13 +13,13 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.3.0',
-    name: 'Link-Dz ⚡',
+    version: '2.3.1',
+    name: 'Link-Dz⚡',
     description: 'Agregateur Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
     catalogs: [],
-    logo: 'https://i.pinimg.com/736x/68/61/90/686190506f87cfc470530dea4bf76a65.jpg'
+    logo: 'https://i.pinimg.com/1200x/45/26/88/45268878ba1c1123ee8621b2d0081fab.jpg'
 };
 
 const SOURCES = [
@@ -51,6 +51,8 @@ function getQualityInfo(title) {
     else if (t.includes('1080p') || t.includes('fhd')) quality = '📺 1080p';
     else if (t.includes('720p') || t.includes('hd')) quality = '🖥️ 720p';
     else if (t.includes('480p') || t.includes('sd')) quality = '📱 480p';
+    else if (t.includes('cam') || t.includes('cam')) quality = '📱 CAM';
+    else if (t.includes('camrip') || t.includes('camrip')) quality = '🖥️ CAM-RIP';
     else quality = '🎥 HD';
     
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('BluRay');
@@ -58,13 +60,14 @@ function getQualityInfo(title) {
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('WEB-DL');
     if (t.includes('webrip')) extra.push('WEBRip');
     if (t.includes('hdtv')) extra.push('HDTV');
-    if (t.includes('dolby vision') || t.includes('dv')) extra.push('DV');
+    if (t.includes('dolby vision') || t.includes('dv')) extra.push('Dolby-Vision');
     else if (t.includes('hdr10+')) extra.push('HDR10+');
+    else if (t.includes('hdr10')) extra.push('HDR10');
     else if (t.includes('hdr')) extra.push('HDR');
-    if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
-    else if (t.includes('av1')) extra.push('AV1');
-    if (t.includes('atmos')) extra.push('Atmos');
-    else if (t.includes('dts')) extra.push('DTS');
+    if (t.includes('hevc') || t.includes('x265')) extra.push('📽️HEVC');
+    else if (t.includes('av1')) extra.push('📹AV1');
+    if (t.includes('atmos')) extra.push('🎧Atmos');
+    else if (t.includes('dts')) extra.push('🔉DTS');
     
     return { quality, extra: extra.join(' • ') };
 }
