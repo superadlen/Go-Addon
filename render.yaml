@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: stremio-torrent-addon
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
