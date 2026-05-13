@@ -50,7 +50,7 @@ function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
-    let lang = '🗣️: ❓🎧';
+    let lang = '🗣️= ❓🎧';
 
     const languages = {
         fr: { flag: '🇫🇷', names: ['french', ' vf ', ' vff ', 'francais'], label: 'VF' },
@@ -94,16 +94,16 @@ function getQualityInfo(title) {
 
     if (found.length >= 5) {
         const flags = found.slice(0, 5).map(code => languages[code].flag).join('/');
-        lang = `🗣️🔉: ${flags} `;
+        lang = `🗣️🔉= ${flags} `;
     } else if (found.length >= 2) {
         const flags = found.map(code => languages[code].flag).join('/');
-        lang = `🗣️🔉: ${flags} `;
+        lang = `🗣️🔉= ${flags} `;
     } else if (t.includes('multi')) {
-        lang = '🗣️🔉: 🌍 MULTI ';
+        lang = '🗣️🔉:= 🌍 MULTI ';
     } else if (found.length === 1) {
         const code = found[0];
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
-        lang = `🗣️🔉: ${languages[code].flag}${suffix}`;
+        lang = `🗣️🔉= ${languages[code].flag}${suffix}`;
     }
 
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬= 4K';
@@ -176,7 +176,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
                     sourceStreams.push({
                         name: `${source.name}\n${info.quality.split(':')[1]}`,
-                        title: `${size} | ${info.quality}\n👤= ${seedsCount}\n${info.lang}\n${⚙️= info.extra || '📦Standard'}`,
+                        title: `${size} | ${info.quality}\n👤= ${seedsCount}\n${info.lang}\n${⚙️= 'info.extra' || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
