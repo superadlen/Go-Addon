@@ -34,33 +34,61 @@ function getQualityInfo(title) {
     let extra = [];
     let lang = '🗣️:🎧';
 
-    // --- NOUVELLE LOGIQUE DE LANGUES INJECTÉE ---
+    // 40 langues
     const languages = {
-        fr: { code: 'fr', flag: '🇫🇷', names: ['french', ' vf ', ' vff '], label: 'VF' },
-        en: { code: 'en', flag: '🇺🇸', names: ['english', ' en ', ' eng '], label: 'VO' },
-        es: { code: 'es', flag: '🇪🇸', names: ['spanish', ' es ', ' spa '] },
-        it: { code: 'it', flag: '🇮🇹', names: ['italian', ' it ', ' ita '] },
-        pt: { code: 'pt', flag: '🇵🇹', names: ['portuguese', ' pt ', ' por '] },
-        ru: { code: 'ru', flag: '🇷🇺', names: ['russian', ' ru ', ' rus '] }
+        fr: { flag: '🇫🇷', names: ['french', ' vf ', ' vff ', 'francais'], label: 'VF' },
+        en: { flag: '🇺🇸', names: ['english', ' en ', ' eng ', 'anglais'], label: 'VO' },
+        es: { flag: '🇪🇸', names: ['spanish', ' es ', ' spa ', 'espanol'] },
+        it: { flag: '🇮🇹', names: ['italian', ' it ', ' ita ', 'italiano'] },
+        pt: { flag: '🇵🇹', names: ['portuguese', ' pt ', ' por ', 'portugues'] },
+        ru: { flag: '🇷🇺', names: ['russian', ' ru ', ' rus ', 'russe'] },
+        de: { flag: '🇩🇪', names: ['german', ' de ', ' ger ', 'deutsch'] },
+        ja: { flag: '🇯🇵', names: ['japanese', ' ja ', ' jpn ', 'japonais'] },
+        zh: { flag: '🇨🇳', names: ['chinese', ' zh ', ' chi ', 'chinois'] },
+        ko: { flag: '🇰🇷', names: ['korean', ' ko ', ' kor ', 'coréen'] },
+        ar: { flag: '🇸🇦', names: ['arabic', ' ar ', ' ara ', 'arabe'] },
+        hi: { flag: '🇮🇳', names: ['hindi', ' hi ', ' hin '] },
+        bn: { flag: '🇧🇩', names: ['bengali', ' bn ', ' ben '] },
+        vi: { flag: '🇻🇳', names: ['vietnamese', ' vi ', ' vie '] },
+        th: { flag: '🇹🇭', names: ['thai', ' th ', ' tha '] },
+        id: { flag: '🇮🇩', names: ['indonesian', ' id ', ' ind '] },
+        tr: { flag: '🇹🇷', names: ['turkish', ' tr ', ' tur '] },
+        nl: { flag: '🇳🇱', names: ['dutch', ' nl ', ' dut '] },
+        pl: { flag: '🇵🇱', names: ['polish', ' pl ', ' pol '] },
+        uk: { flag: '🇺🇦', names: ['ukrainian', ' uk ', ' ukr '] },
+        ro: { flag: '🇷🇴', names: ['romanian', ' ro ', ' ron '] },
+        hu: { flag: '🇭🇺', names: ['hungarian', ' hu ', ' hun '] },
+        cs: { flag: '🇨🇿', names: ['czech', ' cs ', ' ces '] },
+        sv: { flag: '🇸🇪', names: ['swedish', ' sv ', ' swe '] },
+        da: { flag: '🇩🇰', names: ['danish', ' da ', ' dan '] },
+        no: { flag: '🇳🇴', names: ['norwegian', ' no ', ' nor '] },
+        fi: { flag: '🇫🇮', names: ['finnish', ' fi ', ' fin '] },
+        el: { flag: '🇬🇷', names: ['greek', ' el ', ' gre '] },
+        he: { flag: '🇮🇱', names: ['hebrew', ' he ', ' heb '] },
+        fa: { flag: '🇮🇷', names: ['persian', ' fa ', ' per '] },
+        sw: { flag: '🇹🇿', names: ['swahili', ' sw ', ' swa '] },
+        ta: { flag: '🇮🇳', names: ['tamil', ' ta ', ' tam '] },
+        te: { flag: '🇮🇳', names: ['telugu', ' te ', ' tel '] }
     };
 
-    const found = Object.values(languages)
-        .filter(l => t.includes(l.code) || l.names.some(name => t.includes(name)))
-        .map(l => l.code);
+    // Détection
+    const found = Object.entries(languages)
+        .filter(([code, data]) => t.includes(code) || data.names.some(name => t.includes(name)))
+        .map(([code]) => code);
 
-    if (found.length >= 4) {
-        lang = '🗣️:🌍 MULTI (4+) 🎶';
+    // Affichage selon le nombre trouvé
+    if (found.length >= 5) {
+        const flags = found.slice(0, 5).map(code => languages[code].flag).join('/');
+        lang = `🗣️:${flags} `;
     } else if (found.length >= 2) {
-        const [a, b] = found;
-        const flags = { fr: '🇫🇷', en: '🇺🇸', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', ru: '🇷🇺' };
-        lang = `🗣️:${flags[a]}/${flags[b]} 🎶`;
+        const flags = found.map(code => languages[code].flag).join('/');
+        lang = `🗣️:${flags} `;
     } else if (t.includes('multi')) {
-        lang = '🗣️:🌍 MULTI 🎶';
+        lang = '🗣️:🌍MULTI ';
     } else if (found.length === 1) {
         const code = found[0];
-        const flag = languages[code].flag;
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
-        lang = `🗣️:${flag}${suffix}`;
+        lang = `🗣️:${languages[code].flag}${suffix}`;
     }
 
     // --- DÉTECTION QUALITÉ ---
