@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.3.6', 
+    version: '2.3.9', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -35,9 +35,9 @@ function getQualityInfo(title) {
     let lang = '🌐';
 
     // Détection de la langue
-    if (t.includes('multi') || (t.includes('fr') && t.includes('en'))) lang = '🇫🇷/🇺🇸';
+    if (t.includes('multi') || (t.includes('fr') && t.includes('en'))) lang = '🇫🇷/🇺🇸 MULTI';
     else if (t.includes('french') || t.includes(' vff ') || t.includes(' vf ')) lang = '🇫🇷 VF';
-    else if (t.includes('vostfr')) lang = '🇫🇷 VOST';
+    else if (t.includes('vostfr')) lang = '🇫🇷 VOSTFR';
     else if (t.includes('english') || t.includes(' en ') || t.includes(' eng ')) lang = '🇺🇸 EN';
     
     // Qualité
@@ -61,16 +61,6 @@ function getSeeders(title) {
     return match ? parseInt(match[1]) : 0;
 }
 
-function getQualityScore(title) {
-    const t = (title || '').toLowerCase();
-    let score = 0;
-    if (t.includes('4k')) score = 10;
-    else if (t.includes('1080p')) score = 7;
-    else if (t.includes('720p')) score = 5;
-    if (t.includes('french') || t.includes('vf')) score += 2;
-    return score;
-}
-
 app.get('/manifest.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(MANIFEST);
@@ -80,7 +70,7 @@ app.get('/', (req, res) => {
     res.send(`<body style="background:#0f0f1a;color:white;text-align:center;padding:50px;font-family:sans-serif;">
         <div style="background:#1a1a2e;padding:30px;border-radius:15px;max-width:500px;margin:0 auto;border:1px solid #303056;">
             <h1 style="color:#e94560;">⚡ Link-Dz Addon</h1>
-            <p>V2.3.6 - Optimisé Stremio</p>
+            <p>V2.3.7 - Langues dans la description</p>
             <a href="stremio://${req.get('host')}/manifest.json" style="background:#e94560;color:white;padding:15px 30px;border-radius:5px;text-decoration:none;font-weight:bold;display:inline-block;margin:20px 0;">🚀 Installer</a>
         </div>
     </body>`);
@@ -108,16 +98,16 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     
                     if (!infoHash && !stream.url) return null;
 
-                    // Construction du titre avec infos techniques en premier, puis le titre original
-                    const technicalInfo = `👤 Seeds: ${seeds} | ${info.extra || 'Standard'}`;
-                    const originalTitle = stream.title ? stream.title.split('\n')[0] : source.name;
+                    // Infos regroupées : Langue + Seeds + Formats
+                    const technicalDetails = `${info.lang} | 👤 Seeds: ${seeds} | ${info.extra || 'Standard'}`;
+                    const originalFileName = stream.title ? stream.title.split('\n')[0] : source.name;
 
                     return {
-                        // Nom du bouton : Source + Langue + Qualité
-                        name: `${source.name}\n${info.lang} ${info.quality}`,
+                        // Name reste simple
+                        name: `${source.name}\n${info.quality}`,
                         
-                        // Description (au survol) : Infos techniques puis nom du fichier
-                        title: `${technicalInfo}\n${originalTitle}`,
+                        // Title regroupe tout (Langue, Seeds, Formats, Nom original)
+                        title: `${technicalDetails}\n${originalFileName}`,
                         
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
@@ -140,10 +130,16 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
+    // Tri intelligent (Qualité d'abord, puis seeds)
     allStreams.sort((a, b) => {
-        const scoreA = getQualityScore(a.name);
-        const scoreB = getQualityScore(b.name);
-        if (scoreB !== scoreA) return scoreB - scoreA;
+        const getScore = (name) => {
+            if (name.includes('4K')) return 10;
+            if (name.includes('1080p')) return 7;
+            if (name.includes('720p')) return 5;
+            return 1;
+        };
+        const diff = getScore(b.name) - getScore(a.name);
+        if (diff !== 0) return diff;
         return getSeeders(b.title) - getSeeders(a.title);
     });
     
@@ -153,4 +149,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.3.6 Online`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.3.7 Online`));
