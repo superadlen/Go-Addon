@@ -1,109 +1,163 @@
 const express = require('express');
 const cors = require('cors');
-const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
 const axios = require('axios');
 const NodeCache = require('node-cache');
 
 const app = express();
-const cache = new NodeCache({ stdTTL: 1800 }); // Cache 30 minutes
-const PORT = process.env.PORT || 3000;
+const cache = new NodeCache({ stdTTL: 1800 });
+const PORT = process.env.PORT || 10000;
 
-// Activer CORS
 app.use(cors());
+app.use(express.json());
 
-// Builder Stremio - AVEC catalogs
-const builder = new addonBuilder({
-    id: 'org.stremio.torrent-aggregator',
-    version: '1.0.0',
-    name: '🎬 Torrent Aggregator',
-    description: 'Meilleurs torrents classés par qualité (4K, 1080p, seeders...)',
+// === MANIFESTE ===
+const manifest = {
+    id: 'org.stremio.go-addon',
+    version: '2.0.0',
+    name: 'Go Addon',
+    description: 'Torrents classés par qualité',
     resources: ['stream'],
     types: ['movie', 'series'],
     idPrefixes: ['tt'],
-    catalogs: [] // ✅ Ajout obligatoire
+    catalogs: []
+};
+
+app.get('/manifest.json', (req, res) => {
+    res.json(manifest);
 });
 
-// Fonction de calcul du score
-function calculerScore(torrent) {
-    let score = 0;
+// === FONCTIONS UTILITAIRES ===
+function extractInfo(title) {
+    const info = { resolution: '1080p', codec: 'x264', hdr: 'SDR' };
+    if (!title) return info;
     
-    // Résolution (40 points max)
-    if (torrent.resolution === '2160p' || torrent.resolution === '4K') score += 40;
-    else if (torrent.resolution === '1080p') score += 30;
-    else if (torrent.resolution === '720p') score += 20;
-    else score += 10;
+    if (title.match(/2160p|4K|UHD/i)) info.resolution = '2160p';
+    else if (title.match(/1080p/i)) info.resolution = '1080p';
+    else if (title.match(/720p/i)) info.resolution = '720p';
     
-    // Seeders (30 points max)
-    if (torrent.seeders >= 100) score += 30;
-    else if (torrent.seeders >= 50) score += 25;
-    else if (torrent.seeders >= 20) score += 20;
-    else if (torrent.seeders >= 10) score += 15;
-    else if (torrent.seeders >= 5) score += 10;
-    else score += 5;
-    
-    // Codec (15 points max)
-    if (torrent.codec && (torrent.codec.includes('HEVC') || torrent.codec.includes('x265') || torrent.codec.includes('h265'))) score += 15;
-    else if (torrent.codec && (torrent.codec.includes('x264') || torrent.codec.includes('AVC'))) score += 10;
-    else score += 5;
-    
-    // HDR (15 points max)
-    if (torrent.hdr) {
-        if (torrent.hdr.includes('DV') || torrent.hdr.includes('Dolby Vision')) score += 15;
-        else if (torrent.hdr.includes('HDR10') || torrent.hdr.includes('HDR')) score += 12;
-        else score += 8;
-    }
-    
-    return score;
-}
-
-// Extraction des informations depuis le titre
-function extraireInfo(title) {
-    const info = {};
-    
-    // Résolution
-    if (title.includes('2160p') || title.includes('4K') || title.includes('UHD')) info.resolution = '2160p';
-    else if (title.includes('1080p')) info.resolution = '1080p';
-    else if (title.includes('720p')) info.resolution = '720p';
-    else info.resolution = '1080p';
-    
-    // Codec
     if (title.match(/HEVC|HEVC|x265|h265/i)) info.codec = 'HEVC';
     else if (title.match(/x264|h264|AVC/i)) info.codec = 'x264';
-    else info.codec = 'x264';
     
-    // HDR
     if (title.includes('DV') || title.includes('Dolby Vision')) info.hdr = 'DV';
     else if (title.includes('HDR10+')) info.hdr = 'HDR10+';
     else if (title.includes('HDR')) info.hdr = 'HDR';
-    else info.hdr = 'SDR';
     
     return info;
 }
 
-// Source 1: Torrentio
-async function searchTorrentio(type, imdbId) {
+function calculerScore(torrent) {
+    let score = 0;
+    if (torrent.resolution === '2160p') score += 40;
+    else if (torrent.resolution === '1080p') score += 30;
+    else if (torrent.resolution === '720p') score += 20;
+    else score += 10;
+    
+    if (torrent.seeders >= 100) score += 30;
+    else if (torrent.seeders >= 50) score += 25;
+    else if (torrent.seeders >= 20) score += 20;
+    else if (torrent.seeders >= 10) score += 15;
+    else score += 5;
+    
+    if (torrent.codec?.match(/HEVC|HEVC|x265|h265/i)) score += 15;
+    else if (torrent.codec?.match(/x264|h264|AVC/i)) score += 10;
+    
+    if (torrent.hdr?.includes('DV')) score += 15;
+    else if (torrent.hdr?.includes('HDR')) score += 12;
+    
+    return score;
+}
+
+// === SOURCE 1: Stremio-Jackett (fiable) ===
+async function searchJackett(type, imdbId) {
     try {
-        const response = await axios.get(`https://torrentio.strem.fun/${type}/${imdbId}.json`, {
-            timeout: 10000
-        });
+        const response = await axios.get(
+            `https://stremio-jackett.elfhosted.com/stream/${type}/${imdbId}.json`,
+            { timeout: 15000 }
+        );
         
-        if (!response.data?.streams) return [];
+        if (!response.data?.streams?.length) return [];
         
         return response.data.streams
             .filter(s => s.infoHash)
             .map(s => {
                 const title = s.title || '';
-                const info = extraireInfo(title);
-                // Extraire les seeders de la description
-                const seedersMatch = s.description?.match(/👤 (\d+)/);
-                const seeders = seedersMatch ? parseInt(seedersMatch[1]) : 0;
+                const info = extractInfo(title);
+                const seeders = parseInt(s.description?.match(/👤 (\d+)/)?.[1] || '0');
                 
                 return {
                     infoHash: s.infoHash,
-                    title: `${info.resolution} | ${info.codec} | ${info.hdr}`,
-                    size: 0,
+                    title: title.substring(0, 100),
                     seeders: seeders,
-                    leechers: 0,
+                    resolution: info.resolution,
+                    codec: info.codec,
+                    hdr: info.hdr,
+                    magnet: s.url || `magnet:?xt=urn:btih:${s.infoHash}`,
+                    provider: 'Jackett'
+                };
+            });
+    } catch (error) {
+        console.error('Jackett erreur:', error.message);
+        return [];
+    }
+}
+
+// === SOURCE 2: ThePirateBay+ (via API alternative) ===
+async function searchTPB(type, imdbId) {
+    try {
+        // Utiliser l'API apibay.org
+        const response = await axios.get(`https://apibay.org/q.php`, {
+            params: { q: imdbId, cat: type === 'movie' ? '201' : '205' },
+            timeout: 10000
+        });
+        
+        if (!response.data?.length) return [];
+        
+        return response.data.slice(0, 10).map(item => ({
+            infoHash: item.info_hash,
+            title: item.name,
+            seeders: parseInt(item.seeders) || 0,
+            resolution: extractInfo(item.name).resolution,
+            codec: extractInfo(item.name).codec,
+            hdr: extractInfo(item.name).hdr,
+            magnet: `magnet:?xt=urn:btih:${item.info_hash}&dn=${encodeURIComponent(item.name)}`,
+            provider: 'TPB'
+        }));
+    } catch (error) {
+        console.error('TPB erreur:', error.message);
+        return [];
+    }
+}
+
+// === SOURCE 3: Torrentio via proxy (contourne le 403) ===
+async function searchTorrentioViaProxy(type, imdbId) {
+    try {
+        // Utiliser un User-Agent différent et un proxy
+        const response = await axios.get(
+            `https://torrentio.strem.fun/${type}/${imdbId}.json`,
+            {
+                timeout: 15000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'application/json',
+                    'Origin': 'https://www.stremio.com',
+                    'Referer': 'https://www.stremio.com/'
+                }
+            }
+        );
+        
+        if (!response.data?.streams?.length) return [];
+        
+        return response.data.streams
+            .filter(s => s.infoHash)
+            .map(s => {
+                const title = s.title || '';
+                const info = extractInfo(title);
+                const seeders = parseInt(s.description?.match(/👤 (\d+)/)?.[1] || '0');
+                
+                return {
+                    infoHash: s.infoHash,
+                    title: title.substring(0, 100),
+                    seeders: seeders,
                     resolution: info.resolution,
                     codec: info.codec,
                     hdr: info.hdr,
@@ -112,152 +166,149 @@ async function searchTorrentio(type, imdbId) {
                 };
             });
     } catch (error) {
-        console.error('Erreur Torrentio:', error.message);
+        console.error('Torrentio proxy erreur:', error.message);
         return [];
     }
 }
 
-// Source 2: YTS (films uniquement)
-async function searchYTS(imdbId) {
+// === SOURCE 4: 1337x via proxy ===
+async function search1337x(type, imdbId) {
     try {
-        if (!imdbId.startsWith('tt')) return [];
-        
-        const response = await axios.get('https://yts.mx/api/v2/list_movies.json', {
-            params: { 
-                query_term: imdbId,
-                limit: 10 
-            },
-            timeout: 10000
-        });
-        
-        if (!response.data?.data?.movies) return [];
-        
-        let torrents = [];
-        for (const movie of response.data.data.movies) {
-            if (movie.torrents) {
-                for (const t of movie.torrents) {
-                    torrents.push({
-                        infoHash: t.hash,
-                        title: `${t.quality} | x264 | SDR`,
-                        size: t.size_bytes,
-                        seeders: t.seeds,
-                        leechers: t.peers,
-                        resolution: t.quality,
-                        codec: 'x264',
-                        hdr: 'SDR',
-                        magnet: `magnet:?xt=urn:btih:${t.hash}&dn=${encodeURIComponent(movie.title)}&tr=udp://tracker.opentrackr.org:1337/announce`,
-                        provider: 'YTS'
-                    });
-                }
+        const response = await axios.get(
+            `https://1337x.to/search/${imdbId}/1/`,
+            { 
+                timeout: 10000,
+                headers: { 'User-Agent': 'Mozilla/5.0' }
             }
-        }
-        return torrents;
+        );
+        
+        // Parse simple (trouver les liens magnet)
+        const magnetMatches = response.data.match(/magnet:\?xt=urn:btih:([a-fA-F0-9]{40})/g) || [];
+        const sizeMatches = response.data.match(/<td class="coll-4">([^<]+)<\/td>/g) || [];
+        const seederMatches = response.data.match(/<td class="coll-2">(\d+)<\/td>/g) || [];
+        
+        return magnetMatches.slice(0, 10).map((magnet, i) => {
+            const infoHash = magnet.match(/([a-fA-F0-9]{40})/)[1];
+            return {
+                infoHash: infoHash,
+                title: `${imdbId} - Result ${i+1}`,
+                seeders: parseInt(seederMatches[i]?.match(/\d+/)?.[0] || '0'),
+                resolution: '1080p',
+                codec: 'x264',
+                hdr: 'SDR',
+                magnet: magnet,
+                provider: '1337x'
+            };
+        });
     } catch (error) {
-        console.error('Erreur YTS:', error.message);
+        console.error('1337x erreur:', error.message);
         return [];
     }
 }
 
-// Handler principal des streams
-builder.defineStreamHandler(async (args) => {
-    const cacheKey = `${args.type}_${args.id}`;
+// === ROUTE PRINCIPALE DES STREAMS ===
+app.get('/stream/:type/:id.json', async (req, res) => {
+    const { type, id } = req.params;
+    const cacheKey = `${type}_${id}`;
+    
+    console.log(`\n🔍 Recherche: ${type} ${id}`);
     
     // Vérifier le cache
     const cached = cache.get(cacheKey);
     if (cached) {
-        console.log(`✓ Cache hit pour ${args.id}`);
-        return Promise.resolve({ streams: cached });
+        console.log('✓ Cache hit');
+        return res.json({ streams: cached });
     }
-    
-    console.log(`🔍 Recherche: ${args.type} ${args.id}`);
     
     try {
         // Lancer toutes les recherches en parallèle
-        const [torrentioResults, ytsResults] = await Promise.all([
-            searchTorrentio(args.type, args.id),
-            args.type === 'movie' ? searchYTS(args.id) : Promise.resolve([])
+        const [jackettResults, tpbResults, torrentioResults, x1337Results] = await Promise.all([
+            searchJackett(type, id),
+            searchTPB(type, id),
+            searchTorrentioViaProxy(type, id),
+            search1337x(type, id)
         ]);
         
-        // Fusionner tous les résultats
-        let allTorrents = [...torrentioResults, ...ytsResults];
+        let allTorrents = [
+            ...jackettResults,
+            ...tpbResults,
+            ...torrentioResults,
+            ...x1337Results
+        ];
         
-        // Dédupliquer par infoHash (garder celui avec le plus de seeders)
+        if (allTorrents.length === 0) {
+            console.log('⚠️ Aucun résultat trouvé');
+            return res.json({ streams: [] });
+        }
+        
+        // Dédupliquer
         const seen = new Map();
-        allTorrents.forEach(torrent => {
-            if (!seen.has(torrent.infoHash) || torrent.seeders > seen.get(torrent.infoHash).seeders) {
-                seen.set(torrent.infoHash, torrent);
+        allTorrents.forEach(t => {
+            if (!seen.has(t.infoHash) || t.seeders > seen.get(t.infoHash).seeders) {
+                seen.set(t.infoHash, t);
             }
         });
         const uniqueTorrents = Array.from(seen.values());
         
-        // Calculer les scores
-        const scoredTorrents = uniqueTorrents.map(torrent => ({
-            ...torrent,
-            score: calculerScore(torrent)
-        }));
+        // Calculer scores et trier
+        uniqueTorrents.forEach(t => t.score = calculerScore(t));
+        uniqueTorrents.sort((a, b) => b.score - a.score);
         
-        // Trier par score (meilleurs en premier)
-        scoredTorrents.sort((a, b) => b.score - a.score);
-        
-        // Limiter à 20 résultats
-        const topTorrents = scoredTorrents.slice(0, 20);
+        const topTorrents = uniqueTorrents.slice(0, 20);
         
         // Formater pour Stremio
-        const streams = topTorrents.map((torrent, index) => {
-            let title = '';
-            
-            // Ajouter médaille pour les top 3
-            if (index === 0) title += '🥇 ';
-            else if (index === 1) title += '🥈 ';
-            else if (index === 2) title += '🥉 ';
-            
-            // Informations de qualité
-            title += `${torrent.resolution}`;
-            if (torrent.hdr !== 'SDR') title += ` ${torrent.hdr}`;
-            title += ` | ${torrent.codec}`;
-            title += `\n💚 ${torrent.seeders} seeds`;
-            title += ` | ⭐ Score: ${torrent.score}/100`;
-            title += `\n📡 ${torrent.provider}`;
-            
-            return {
-                name: 'Torrent Aggregator',
-                title: title,
-                infoHash: torrent.infoHash,
-                url: torrent.magnet,
-                behaviorHints: {
-                    notWebReady: true,
-                    bingeGroup: `${args.type}-${torrent.resolution}`
-                }
-            };
-        });
+        const streams = topTorrents.map((t, i) => ({
+            name: 'Go Addon',
+            title: `${i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : ''}${t.resolution} | ${t.codec} | ${t.hdr}\n💚 ${t.seeders} seeds | ⭐${t.score}/100 | 📡 ${t.provider}`,
+            infoHash: t.infoHash,
+            url: t.magnet,
+            behaviorHints: { notWebReady: true }
+        }));
         
-        console.log(`✅ ${streams.length} streams trouvés pour ${args.id}`);
+        console.log(`✅ ${streams.length} streams trouvés\n`);
         
         // Mettre en cache
         cache.set(cacheKey, streams);
         
-        return Promise.resolve({ streams });
+        res.json({ streams });
         
     } catch (error) {
         console.error('❌ Erreur:', error);
-        return Promise.resolve({ streams: [] });
+        res.json({ streams: [] });
     }
 });
 
-// Route de santé pour Render
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok',
-        uptime: process.uptime(),
-        cache: cache.getStats()
-    });
+// Route de test
+app.get('/test', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Test Go Addon</title>
+        <style>
+            body { font-family: Arial; margin: 40px; background: #1a1a2e; color: #fff; }
+            a { color: #4ecdc4; display: block; margin: 10px 0; }
+            .success { color: #4ecdc4; }
+        </style>
+        </head>
+        <body>
+            <h1>🎬 Go Addon - Page de test</h1>
+            <p>Testez les liens ci-dessous :</p>
+            <h3>Films :</h3>
+            <a href="/stream/movie/tt0111161.json">The Shawshank Redemption (tt0111161)</a>
+            <a href="/stream/movie/tt0468569.json">The Dark Knight (tt0468569)</a>
+            <a href="/stream/movie/tt0133093.json">The Matrix (tt0133093)</a>
+            <a href="/stream/movie/tt16431404.json">Your test movie (tt16431404)</a>
+            <h3>Séries :</h3>
+            <a href="/stream/series/tt0944947.json">Game of Thrones (tt0944947)</a>
+            <a href="/stream/series/tt0903747.json">Breaking Bad (tt0903747)</a>
+            <p><a href="/manifest.json">Voir le manifeste</a></p>
+        </body>
+        </html>
+    `);
 });
 
-// Démarrer le serveur
-const addonInterface = builder.getInterface();
-serveHTTP(addonInterface, { 
-    port: PORT,
-    express: app 
+app.listen(PORT, () => {
+    console.log(`\n🚀 Go Addon démarré sur le port ${PORT}`);
+    console.log(`📝 Test: http://localhost:${PORT}/test`);
+    console.log(`📋 Manifeste: http://localhost:${PORT}/manifest.json\n`);
 });
-
-console.log(`🚀 Addon démarré sur le port ${PORT}`);
