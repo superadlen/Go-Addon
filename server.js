@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.4.1', 
+    version: '2.4.2', 
     name: 'Link-Dz⚡',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -34,7 +34,7 @@ function getQualityInfo(title) {
     let extra = [];
     let lang = '🗣️:🎧';
 
-    // Détection des langues
+    // --- NOUVELLE LOGIQUE DE LANGUES INJECTÉE ---
     const languages = {
         fr: { code: 'fr', flag: '🇫🇷', names: ['french', ' vf ', ' vff '], label: 'VF' },
         en: { code: 'en', flag: '🇺🇸', names: ['english', ' en ', ' eng '], label: 'VO' },
@@ -45,8 +45,8 @@ function getQualityInfo(title) {
     };
 
     const found = Object.values(languages)
-        .filter(lang => t.includes(lang.code) || lang.names.some(name => t.includes(name)))
-        .map(lang => lang.code);
+        .filter(l => t.includes(l.code) || l.names.some(name => t.includes(name)))
+        .map(l => l.code);
 
     if (found.length >= 4) {
         lang = '🗣️:🌍 MULTI (4+) 🎶';
@@ -58,73 +58,48 @@ function getQualityInfo(title) {
         lang = '🗣️:🌍 MULTI 🎶';
     } else if (found.length === 1) {
         const code = found[0];
-        const flag = { fr: '🇫🇷', en: '🇺🇸', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', ru: '🇷🇺' }[code];
+        const flag = languages[code].flag;
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
         lang = `🗣️:${flag}${suffix}`;
-    
-    // Qualité
+    }
+
+    // --- DÉTECTION QUALITÉ ---
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬: 4K';
     else if (t.includes('1080p')) quality = '📺: 1080p';
     else if (t.includes('720p')) quality = '🖥️: 720p';
     else if (t.includes('cam')) quality = '📱: CAM';
     else quality = '🎥: HD';
-    
-    // Formats
+
+    // --- DÉTECTION EXTRA / FORMATS ---
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
-if (t.includes('remux')) extra.push('📀REMUX');
-if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
-if (t.includes('webrip')) extra.push('🌍WEBRip');
-if (t.includes('dvdrip')) extra.push('📼DVDRip');
-if (t.includes('hdrip')) extra.push('🎞️HDRip');
-if (t.includes('uhd')) extra.push('🖥️UHD');
-if (t.includes('ds4k')) extra.push('🎥DS4K');
+    if (t.includes('remux')) extra.push('📀REMUX');
+    if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
+    if (t.includes('webrip')) extra.push('🌍WEBRip');
+    if (t.includes('dvdrip')) extra.push('📼DVDRip');
+    if (t.includes('hdrip')) extra.push('🎞️HDRip');
+    if (t.includes('uhd')) extra.push('🖥️UHD');
+    if (t.includes('amzn')) extra.push('🛒AMZN');
 
-if (t.includes('amzn')) extra.push('🛒AMZN');
+    if (t.includes('hevc') || t.includes('x265') || t.includes('h265')) extra.push('HEVC');
+    if (t.includes('x264')) extra.push('X264');
+    if (t.includes('10bit')) extra.push('🎨10BIT');
 
-if (t.includes('4k')) extra.push('4K');
-if (t.includes('2160p')) extra.push('UHD');
-if (t.includes('1080p')) extra.push('FHD');
-if (t.includes('720p')) extra.push('HD');
-if (t.includes('480p')) extra.push('SD');
+    if (t.includes('hdr10')) extra.push('💯HDR10');
+    else if (t.includes('hdr')) extra.push('✨HDR');
 
-if (t.includes('hevc') || t.includes('x265') || t.includes('h265')) extra.push('HEVC');
-if (t.includes('x264')) extra.push('X264');
-if (t.includes('10bit')) extra.push('🎨10BIT');
+    if (t.includes('dolby vision') || t.includes(' dv ') || t.includes('.dv.')) extra.push('🌈DV');
 
-if (t.includes('hdr10')) extra.push('💯HDR10');
-if (t.includes('hdr')) extra.push('✨HDR');
+    if (t.includes('atmos')) extra.push('🎧Atmos');
+    if (t.includes('ddp5') || t.includes('ddp5.1')) extra.push('🔊DDP5.1');
+    if (t.includes('truehd')) extra.push('🎵TrueHD');
+    if (t.includes('dts')) extra.push('🔊DTS');
+    if (t.includes('aac')) extra.push('🔉AAC');
 
-if (
-    t.includes('dolby vision') ||
-    t.includes(' dv ') ||
-    t.includes('.dv.')
-) extra.push('🌈DV');
+    if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬SUB');
+    if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
+    if (t.includes('proper')) extra.push('✅PROPER');
+    if (t.includes('repack')) extra.push('♻️REPACK');
 
-if (t.includes('p5')) extra.push('📀P5');
-if (t.includes('p7')) extra.push('💽P7');
-
-if (t.includes('atmos')) extra.push('🎧Atmos');
-if (t.includes('ddp5') || t.includes('ddp5.1')) extra.push('🔊DDP5.1');
-if (t.includes('truehd')) extra.push('🎵TrueHD');
-if (t.includes('dts')) extra.push('🔊DTS');
-if (t.includes('aac')) extra.push('🔉AAC');
-
-if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬SUB');
-if (t.includes('softsub')) extra.push('📝SoftSub');
-if (t.includes('hardsub')) extra.push('📌HardSub');
-
-if (t.includes('dub') || t.includes('dubbed')) extra.push('🎙️DUB');
-if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
-
-if (t.includes('esp')) extra.push('🇪🇸ESP');
-
-if (t.includes('org')) extra.push('📦ORG');
-
-if (t.includes('proper')) extra.push('✅PROPER');
-if (t.includes('repack')) extra.push('♻️REPACK');
-if (t.includes('extended')) extra.push('🧩EXTENDED');
-if (t.includes('uncut')) extra.push('✂️UNCUT');
-    
     return { quality, extra: extra.join('|'), lang };
 }
 
@@ -142,7 +117,7 @@ app.get('/', (req, res) => {
     res.send(`<body style="background:#0f0f1a;color:white;text-align:center;padding:50px;font-family:sans-serif;">
         <div style="background:#1a1a2e;padding:30px;border-radius:15px;max-width:500px;margin:0 auto;border:1px solid #303056;">
             <h1 style="color:#e94560;">⚡ Link-Dz Addon</h1>
-            <p>V2.3.7 - Langues dans la description</p>
+            <p>V2.4.2 - Système de Langue Dynamique</p>
             <a href="stremio://${req.get('host')}/manifest.json" style="background:#e94560;color:white;padding:15px 30px;border-radius:5px;text-decoration:none;font-weight:bold;display:inline-block;margin:20px 0;">🚀 Installer</a>
         </div>
     </body>`);
@@ -170,17 +145,12 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     
                     if (!infoHash && !stream.url) return null;
 
-                    // Infos regroupées : Langue + Seeds + Formats
                     const technicalDetails = `${info.lang}|👤:${seeds}|${info.extra || 'Standard'}`;
                     const originalFileName = stream.title ? stream.title.split('\n')[0] : source.name;
 
                     return {
-                        // Name reste simple
                         name: `${source.name}\n${info.quality}`,
-                        
-                        // Title regroupe tout (Langue, Seeds, Formats, Nom original)
                         title: `${technicalDetails}\n${originalFileName}`,
-                        
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
@@ -202,7 +172,6 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
-    // Tri intelligent (Qualité d'abord, puis seeds)
     allStreams.sort((a, b) => {
         const getScore = (name) => {
             if (name.includes('4K')) return 10;
@@ -221,4 +190,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.3.7 Online`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.4.2 Online`));
