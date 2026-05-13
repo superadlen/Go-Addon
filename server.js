@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Activer CORS
 app.use(cors());
 
-// Builder Stremio
+// Builder Stremio - AVEC catalogs
 const builder = new addonBuilder({
     id: 'org.stremio.torrent-aggregator',
     version: '1.0.0',
@@ -19,7 +19,8 @@ const builder = new addonBuilder({
     description: 'Meilleurs torrents classés par qualité (4K, 1080p, seeders...)',
     resources: ['stream'],
     types: ['movie', 'series'],
-    idPrefixes: ['tt']
+    idPrefixes: ['tt'],
+    catalogs: [] // ✅ Ajout obligatoire
 });
 
 // Fonction de calcul du score
@@ -76,9 +77,6 @@ function extraireInfo(title) {
     else if (title.includes('HDR')) info.hdr = 'HDR';
     else info.hdr = 'SDR';
     
-    // Seeders (extraire de la description)
-    info.seeders = 0;
-    
     return info;
 }
 
@@ -96,12 +94,15 @@ async function searchTorrentio(type, imdbId) {
             .map(s => {
                 const title = s.title || '';
                 const info = extraireInfo(title);
+                // Extraire les seeders de la description
+                const seedersMatch = s.description?.match(/👤 (\d+)/);
+                const seeders = seedersMatch ? parseInt(seedersMatch[1]) : 0;
                 
                 return {
                     infoHash: s.infoHash,
                     title: `${info.resolution} | ${info.codec} | ${info.hdr}`,
                     size: 0,
-                    seeders: s.description?.match(/👤 (\d+)/)?.[1] || 0,
+                    seeders: seeders,
                     leechers: 0,
                     resolution: info.resolution,
                     codec: info.codec,
@@ -157,26 +158,6 @@ async function searchYTS(imdbId) {
     }
 }
 
-// Source 3: 1337x via API alternative
-async function search1337x(type, imdbId) {
-    try {
-        // Utiliser une API publique
-        const response = await axios.get(`https://api.prowlarr.com/api/v1/search`, {
-            params: {
-                query: imdbId,
-                type: type === 'movie' ? 'movie' : 'tv',
-                limit: 10
-            },
-            timeout: 10000
-        });
-        
-        // Format simplifié si l'API répond
-        return [];
-    } catch (error) {
-        return [];
-    }
-}
-
 // Handler principal des streams
 builder.defineStreamHandler(async (args) => {
     const cacheKey = `${args.type}_${args.id}`;
@@ -200,15 +181,14 @@ builder.defineStreamHandler(async (args) => {
         // Fusionner tous les résultats
         let allTorrents = [...torrentioResults, ...ytsResults];
         
-        // Dédupliquer par infoHash
+        // Dédupliquer par infoHash (garder celui avec le plus de seeders)
         const seen = new Map();
-        const uniqueTorrents = [];
         allTorrents.forEach(torrent => {
             if (!seen.has(torrent.infoHash) || torrent.seeders > seen.get(torrent.infoHash).seeders) {
                 seen.set(torrent.infoHash, torrent);
             }
         });
-        uniqueTorrents.push(...Array.from(seen.values()));
+        const uniqueTorrents = Array.from(seen.values());
         
         // Calculer les scores
         const scoredTorrents = uniqueTorrents.map(torrent => ({
