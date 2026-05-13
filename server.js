@@ -176,7 +176,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
                     sourceStreams.push({
                         name: `${source.name} | ${info.quality.split(':')[1]}`,
-                        title: `${size} | ${info.quality}\n👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
+                        title: `${size} | \n👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
