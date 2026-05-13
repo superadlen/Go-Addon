@@ -106,11 +106,11 @@ function getQualityInfo(title) {
         lang = `🗣️🔉= ${languages[code].flag}${suffix}`;
     }
 
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:=4K';
-    else if (t.includes('1080p')) quality = '📺:=1080p';
+    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:= 4K';
+    else if (t.includes('1080p')) quality = '📺:= 1080p';
     else if (t.includes('720p')) quality = '🖥️:= 720p';
-    else if (t.includes('cam')) quality = '📱:=CAM';
-    else quality = '🎥:=HD';
+    else if (t.includes('cam')) quality = '📱:= CAM';
+    else quality = '🎥:= HD';
 
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
@@ -175,7 +175,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     if (!infoHash && !stream.url) continue;
 
                     sourceStreams.push({
-                        name: `${source.name}\n${info.quality.split(':')[1]}`,
+                        name: `${source.name} | ${info.quality.split(':')[1]}`,
                         title: `${size} | ${info.quality}\n👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
