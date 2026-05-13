@@ -32,15 +32,13 @@ function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
-    let lang = '🌐'; // Symbole par défaut
+    let lang = '🌐';
 
     // Détection de la langue
     if (t.includes('multi') || (t.includes('fr') && t.includes('en'))) lang = '🇫🇷/🇺🇸';
-    else if (t.includes('french') || t.includes(' vff ') || t.includes(' vf ')) lang = '🇫🇷 FR';
+    else if (t.includes('french') || t.includes(' vff ') || t.includes(' vf ')) lang = '🇫🇷 VF';
     else if (t.includes('vostfr')) lang = '🇫🇷 VOST';
     else if (t.includes('english') || t.includes(' en ') || t.includes(' eng ')) lang = '🇺🇸 EN';
-    else if (t.includes('ita')) lang = '🇮🇹 ITA';
-    else if (t.includes('spa')) lang = '🇪🇸 SPA';
     
     // Qualité
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬 4K';
@@ -51,6 +49,7 @@ function getQualityInfo(title) {
     
     // Formats
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('BluRay');
+    if (t.includes('remux')) extra.push('REMUX');
     if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
     if (t.includes('10bit')) extra.push('10bit');
     
@@ -81,7 +80,7 @@ app.get('/', (req, res) => {
     res.send(`<body style="background:#0f0f1a;color:white;text-align:center;padding:50px;font-family:sans-serif;">
         <div style="background:#1a1a2e;padding:30px;border-radius:15px;max-width:500px;margin:0 auto;border:1px solid #303056;">
             <h1 style="color:#e94560;">⚡ Link-Dz Addon</h1>
-            <p>Langues & Qualités optimisées</p>
+            <p>V2.3.6 - Optimisé Stremio</p>
             <a href="stremio://${req.get('host')}/manifest.json" style="background:#e94560;color:white;padding:15px 30px;border-radius:5px;text-decoration:none;font-weight:bold;display:inline-block;margin:20px 0;">🚀 Installer</a>
         </div>
     </body>`);
@@ -92,8 +91,6 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     const cacheKey = `${type}-${id}`;
     const cached = cache.get(cacheKey);
     if (cached) return res.json(cached);
-    
-    console.log(`🔍 Scan: ${type} ${id}`);
     
     const promises = SOURCES.map(source => 
         axios.get(`${source.url}/stream/${type}/${id}.json`, { timeout: TIMEOUT, headers: { 'User-Agent': 'Mozilla/5.0' } })
@@ -111,13 +108,16 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     
                     if (!infoHash && !stream.url) return null;
 
+                    // Construction du titre avec infos techniques en premier, puis le titre original
+                    const technicalInfo = `👤 Seeds: ${seeds} | ${info.extra || 'Standard'}`;
+                    const originalTitle = stream.title ? stream.title.split('\n')[0] : source.name;
+
                     return {
-                        // On affiche : Nom Source | Langue | Qualité
+                        // Nom du bouton : Source + Langue + Qualité
                         name: `${source.name}\n${info.lang} ${info.quality}`,
                         
-                        // Titre nettoyé : on ne met plus le titre brut original
-                        // Mais seulement les seeds et le format technique
-                        title: `👤 Seeds: ${seeds} | ${info.extra || 'Standard'}`,
+                        // Description (au survol) : Infos techniques puis nom du fichier
+                        title: `${technicalInfo}\n${originalTitle}`,
                         
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
@@ -143,7 +143,8 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     allStreams.sort((a, b) => {
         const scoreA = getQualityScore(a.name);
         const scoreB = getQualityScore(b.name);
-        return scoreB - scoreA;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        return getSeeders(b.title) - getSeeders(a.title);
     });
     
     const result = { streams: allStreams.slice(0, 40) };
@@ -152,4 +153,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.3.5 Online`));
+app.listen(PORT, () => console.log(`⚡ Link-Dz v2.3.6 Online`));
