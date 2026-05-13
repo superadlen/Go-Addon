@@ -8,18 +8,20 @@ app.use(cors());
 
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 120 });
 
+// ⏱️ Timeout réduit à 7 secondes
+const TIMEOUT = 7000;
+
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.2.0',
-    name: 'Link-Dz 🌟',
-    description: 'Agregateur Multi-Sources - Films & Series By Superadlen DZ',
+    version: '2.3.0',
+    name: 'Link-Dz ⚡',
+    description: 'Agregateur Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
     catalogs: [],
     logo: 'https://i.pinimg.com/736x/68/61/90/686190506f87cfc470530dea4bf76a65.jpg'
 };
 
-// Sources avec leurs noms personnalisés
 const SOURCES = [
     { 
         url: 'https://filmora-production.up.railway.app', 
@@ -44,7 +46,6 @@ function getQualityInfo(title) {
     let quality = '';
     let extra = [];
     
-    // Résolution
     if (t.includes('2160p') || t.includes('4k') || t.includes('uhd')) quality = '🎬 4K';
     else if (t.includes('1440p') || t.includes('2k')) quality = '📺 2K';
     else if (t.includes('1080p') || t.includes('fhd')) quality = '📺 1080p';
@@ -52,30 +53,20 @@ function getQualityInfo(title) {
     else if (t.includes('480p') || t.includes('sd')) quality = '📱 480p';
     else quality = '🎥 HD';
     
-    // Type de source
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('BluRay');
     if (t.includes('remux')) extra.push('REMUX');
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('WEB-DL');
     if (t.includes('webrip')) extra.push('WEBRip');
     if (t.includes('hdtv')) extra.push('HDTV');
-    
-    // HDR
     if (t.includes('dolby vision') || t.includes('dv')) extra.push('DV');
     else if (t.includes('hdr10+')) extra.push('HDR10+');
     else if (t.includes('hdr')) extra.push('HDR');
-    
-    // Codec
     if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
     else if (t.includes('av1')) extra.push('AV1');
-    
-    // Audio
     if (t.includes('atmos')) extra.push('Atmos');
     else if (t.includes('dts')) extra.push('DTS');
     
-    return {
-        quality: quality,
-        extra: extra.join(' • ')
-    };
+    return { quality, extra: extra.join(' • ') };
 }
 
 function getSeeders(title) {
@@ -86,20 +77,16 @@ function getSeeders(title) {
 function getQualityScore(title) {
     const t = (title || '').toLowerCase();
     let score = 0;
-    
     if (t.includes('4k') || t.includes('2160p')) score = 8;
     else if (t.includes('1080p')) score = 6;
     else if (t.includes('720p')) score = 4;
     else score = 3;
-    
     if (t.includes('bluray') || t.includes('remux')) score += 2;
     if (t.includes('hevc') || t.includes('x265')) score += 1;
     if (t.includes('dolby') || t.includes('atmos')) score += 1;
-    
     return score;
 }
 
-// Routes
 app.get('/manifest.json', (req, res) => res.json(MANIFEST));
 
 app.get('/', (req, res) => {
@@ -118,10 +105,10 @@ app.get('/', (req, res) => {
         </head>
         <body>
             <div class="card">
-                <h1>🌟 Link-Dz Addon</h1>
-                <p>Agrégateur Multi-Sources</p>
+                <h1>⚡ Link-Dz Addon</h1>
+                <p>Agrégateur Multi-Sources Rapide</p>
                 <div class="sources">
-                    <strong>📡 Sources :</strong>
+                    <strong>📡 Sources (timeout: 7s) :</strong>
                     ${SOURCES.map(s => `<div class="source">• ${s.name}</div>`).join('')}
                 </div>
                 <a href="stremio://${req.get('host')}/manifest.json" class="btn">🚀 Installer</a>
@@ -140,39 +127,43 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     const cached = cache.get(cacheKey);
     if (cached) return res.json(cached);
     
-    console.log(`\n🔍 Recherche: ${type} ${id}`);
+    console.log(`\n🔍 Recherche: ${type} ${id} (timeout: ${TIMEOUT/1000}s)`);
     
     let allStreams = [];
     
-    for (const source of SOURCES) {
-        try {
-            const response = await axios.get(`${source.url}/stream/${type}/${id}.json`, {
-                timeout: 8000,
-                headers: { 'User-Agent': 'Mozilla/5.0' }
-            });
-            
+    // Lancer toutes les requêtes en parallèle
+    const promises = SOURCES.map(source => 
+        axios.get(`${source.url}/stream/${type}/${id}.json`, {
+            timeout: TIMEOUT,
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        })
+        .then(response => {
             if (response.data?.streams) {
                 const modified = response.data.streams.map(stream => {
                     const qualityInfo = getQualityInfo(stream.title || '');
                     const seeders = getSeeders(stream.title || '');
-                    
                     return {
                         ...stream,
-                        name: `${source.name}\n${qualityInfo.quality}`,  // Nom + Qualité
+                        name: `${source.name}\n${qualityInfo.quality}`,
                         title: stream.title || `${source.name}`,
                         description: qualityInfo.extra 
                             ? `${qualityInfo.extra} | 💚 ${seeders} seeds`
                             : `💚 ${seeders} seeds`
                     };
                 });
-                
                 console.log(`✅ ${source.name}: ${modified.length} streams`);
-                allStreams = [...allStreams, ...modified];
+                return modified;
             }
-        } catch (error) {
-            console.log(`❌ ${source.name}: Indisponible`);
-        }
-    }
+            return [];
+        })
+        .catch(error => {
+            console.log(`❌ ${source.name}: Timeout ou erreur`);
+            return [];
+        })
+    );
+    
+    const results = await Promise.all(promises);
+    allStreams = results.flat();
     
     // Trier par qualité puis seeders
     allStreams.sort((a, b) => {
@@ -189,7 +180,6 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log('🚀 Link-Dz Addon démarré');
-    console.log('📡 Sources configurées:');
+    console.log(`⚡ Link-Dz Addon démarré (timeout: ${TIMEOUT/1000}s)`);
     SOURCES.forEach(s => console.log(`   • ${s.name}`));
 });
