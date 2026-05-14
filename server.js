@@ -11,8 +11,8 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.5', 
-    name: 'Link♦️Dz',
+    version: '2.5.6', 
+    name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
@@ -22,10 +22,10 @@ const MANIFEST = {
 };
 
 const SOURCES = [
-    { url: 'https://filmora-production.up.railway.app', name: 'Link-2' },
-    { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Link-1' },
-    { url: 'https://str.zmb.lat/lite', name: 'Link-3' },
-    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Link-4' }
+    { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Torrent-Dz:1' },
+    { url: 'https://filmora-production.up.railway.app', name: 'Torrent-Dz:2' },
+    { url: 'https://str.zmb.lat/lite', name: 'Torrent-Dz:3' },
+    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz:4' }
 ];
 
 function getFileSize(title) {
@@ -40,8 +40,8 @@ function getSeeders(title) {
 
 function getQualityScore(text) {
     const t = (text || '').toLowerCase();
-    if (t.includes('1080p')) return 7;
     if (t.includes('4k') || t.includes('2160p')) return 10;
+    if (t.includes('1080p')) return 7;
     if (t.includes('720p')) return 5;
     return 1;
 }
@@ -106,11 +106,12 @@ function getQualityInfo(title) {
         lang = `🎧= ${languages[code].flag}${suffix}`;
     }
 
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:🖥️= 4K';
-    else if (t.includes('1080p')) quality = '📺:🖥️= 1080p';
-    else if (t.includes('720p')) quality = '🖥️:🖥️= 720p';
-    else if (t.includes('cam')) quality = '📱:🖥️= CAM';
-    else quality = '🎥:= HD';
+    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:UHD-4K';
+    else if (t.includes('1440p')) quality = '📺:FHD-2K';
+    else if (t.includes('1080p')) quality = '📺:1080p';
+    else if (t.includes('720p')) quality = '🖥️:720p';
+    else if (t.includes('cam')) quality = '📱:CAM';
+    else quality = '🎥:HD';
 
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
@@ -119,6 +120,7 @@ function getQualityInfo(title) {
     if (t.includes('dvdrip')) extra.push('📼DVDRip');
     if (t.includes('hdrip')) extra.push('🎞️HDRip');
     if (t.includes('uhd')) extra.push('🖥️UHD');
+    if (t.includes('3d')) extra.push('🖥️3D');
     if (t.includes('amzn')) extra.push('🛒AMZN');
     if (t.includes('hevc') || t.includes('x265') || t.includes('h265')) extra.push('HEVC');
     if (t.includes('x264')) extra.push('X264');
@@ -135,6 +137,12 @@ function getQualityInfo(title) {
     if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
     if (t.includes('proper')) extra.push('✅PROPER');
     if (t.includes('repack')) extra.push('♻️REPACK');
+    if (t.includes('yts') || t.includes('yify') || t.includes('subtitle')) extra.push('🪢YTS');
+    if (t.includes('thepiratebay')) extra.push('🪢TPB+');
+    if (t.includes('1337x')) extra.push('🪢1337x');
+    if (t.includes('rutor')) extra.push('🪢Rutor');
+    if (t.includes('Peerflix')) extra.push('🪢Djezzy');
+    
 
     return { quality, extra: extra.join('|'), lang };
 }
