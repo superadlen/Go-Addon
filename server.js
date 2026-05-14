@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.8', 
+    version: '2.5.9', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -30,6 +30,7 @@ const SOURCES = [
     { url: 'https://thepiratebay-plus.strem.fun', name: 'Torrent-Dz:6' },
 ];
 
+// --- NOUVELLE FONCTION PEER SITE ---
 function getPeerSite(title) {
     const t = (title || '').toLowerCase();
     if (t.includes('yts') || t.includes('yify') || t.includes('yifi')) return 'YTS';
@@ -78,93 +79,33 @@ function getQualityInfo(title) {
         ru: { flag: '🇷🇺', names: ['russian', ' ru ', ' rus ', 'russe'] },
         de: { flag: '🇩🇪', names: ['german', ' de ', ' ger ', 'deutsch'] },
         ja: { flag: '🇯🇵', names: ['japanese', ' ja ', ' jpn ', 'japonais'] },
-        zh: { flag: '🇨🇳', names: ['chinese', ' zh ', ' chi ', 'chinois'] },
-        ko: { flag: '🇰🇷', names: ['korean', ' ko ', ' kor ', 'coréen'] },
-        ar: { flag: '🇸🇦', names: ['arabic', ' ar ', ' ara ', 'arabe'] },
-        hi: { flag: '🇮🇳', names: ['hindi', ' hi ', ' hin '] },
-        bn: { flag: '🇧🇩', names: ['bengali', ' bn ', ' ben '] },
-        vi: { flag: '🇻🇳', names: ['vietnamese', ' vi ', ' vie '] },
-        th: { flag: '🇹🇭', names: ['thai', ' th ', ' tha '] },
-        id: { flag: '🇮🇩', names: ['indonesian', ' id ', ' ind '] },
-        tr: { flag: '🇹🇷', names: ['turkish', ' tr ', ' tur '] },
-        nl: { flag: '🇳🇱', names: ['dutch', ' nl ', ' dut '] },
-        pl: { flag: '🇵🇱', names: ['polish', ' pl ', ' pol '] },
-        uk: { flag: '🇺🇦', names: ['ukrainian', ' uk ', ' ukr '] },
-        ro: { flag: '🇷🇴', names: ['romanian', ' ro ', ' ron '] },
-        hu: { flag: '🇭🇺', names: ['hungarian', ' hu ', ' hun '] },
-        cs: { flag: '🇨🇿', names: ['czech', ' cs ', ' ces '] },
-        sv: { flag: '🇸🇪', names: ['swedish', ' sv ', ' swe '] },
-        da: { flag: '🇩🇰', names: ['danish', ' da ', ' dan '] },
-        no: { flag: '🇳🇴', names: ['norwegian', ' no ', ' nor '] },
-        fi: { flag: '🇫🇮', names: ['finnish', ' fi ', ' fin '] },
-        el: { flag: '🇬🇷', names: ['greek', ' el ', ' gre '] },
-        he: { flag: '🇮🇱', names: ['hebrew', ' he ', ' heb '] },
-        fa: { flag: '🇮🇷', names: ['persian', ' fa ', ' per '] },
-        sw: { flag: '🇹🇿', names: ['swahili', ' sw ', ' swa '] },
-        ta: { flag: '🇮🇳', names: ['tamil', ' ta ', ' tam '] },
-        te: { flag: '🇮🇳', names: ['telugu', ' te ', ' tel '] }
+        ar: { flag: '🇸🇦', names: ['arabic', ' ar ', ' ara ', 'arabe'] }
     };
 
     const found = Object.entries(languages)
         .filter(([code, data]) => t.includes(code) || data.names.some(name => t.includes(name)))
         .map(([code]) => code);
 
-    if (found.length >= 5) {
-        const flags = found.slice(0, 5).map(code => languages[code].flag).join('/');
-        lang = `🎧= ${flags} `;
-    } else if (found.length >= 2) {
+    if (found.length >= 2) {
         const flags = found.map(code => languages[code].flag).join('/');
         lang = `🎧= ${flags} `;
     } else if (t.includes('multi')) {
-        lang = '🎧:= 🌍 MULTI ';
+        lang = '🎧= 🌍 MULTI ';
     } else if (found.length === 1) {
         const code = found[0];
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
         lang = `🎧= ${languages[code].flag}${suffix}`;
     }
 
-    if (t.includes('4320p') || t.includes('8k')) quality = '🪐:8K';
-    else if (t.includes('2160p') || t.includes('4k') || t.includes('uhd')) quality = '🎬:UHD-4K';
-    else if (t.includes('1440p') || t.includes('2k') || t.includes('qhd')) quality = '📺:FHD-2K';
-    else if (t.includes('1080p') || t.includes('fhd') || t.includes('fullhd')) quality = '📺:1080p';
-    else if (t.includes('900p')) quality = '💻:900p';
+    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
+    else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
-    else if (t.includes('576p')) quality = '📼:576p';
-    else if (t.includes('480p')) quality = '📼:480p';
-    else if (t.includes('360p')) quality = '📱:360p';
-    else if (t.includes('240p')) quality = '📱:240p';
-    else if (t.includes('3d')) quality = '眼镜:3D';
-    else if (t.includes('hdrip')) quality = '💿:BluRay';
-    else if (t.includes('web-dl')) quality = '📀:WEB-DL';
-    else if (t.includes('webrip')) quality = '📡:WEBRip';
-    else if (t.includes('dvdrip')) quality = '📡:DVDRip';
-    else if (t.includes('cam')) quality = '📱:CAM';
     else quality = '🎥:HD';
 
-    if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
-    if (t.includes('remux')) extra.push('📀REMUX');
+    if (t.includes('bluray')) extra.push('💿BluRay');
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
-    if (t.includes('webrip')) extra.push('🌍WEBRip');
-    if (t.includes('dvdrip')) extra.push('📼DVDRip');
-    if (t.includes('hdrip')) extra.push('🎞️HDRip');
-    if (t.includes('uhd')) extra.push('🖥️UHD');
-    if (t.includes('3d')) extra.push('🔅3D');
-    if (t.includes('amzn')) extra.push('🛒AMZN');
-    if (t.includes('hevc') || t.includes('x265') || t.includes('h265')) extra.push('HEVC');
+    if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
     if (t.includes('x264')) extra.push('X264');
-    if (t.includes('10bit')) extra.push('🎨10BIT');
-    if (t.includes('hdr10')) extra.push('💯HDR10');
-    else if (t.includes('hdr')) extra.push('✨HDR');
-    if (t.includes('dolby vision') || t.includes(' dv ') || t.includes('.dv.')) extra.push('🌈DolbyVision');
-    if (t.includes('atmos')) extra.push('🎧Atmos');
-    if (t.includes('ddp5') || t.includes('ddp5.1')) extra.push('🔊DDP5.1');
-    if (t.includes('truehd')) extra.push('🎵TrueHD');
-    if (t.includes('dts')) extra.push('🔊DTS');
-    if (t.includes('aac')) extra.push('🔉AAC');
-    if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬SUB');
-    if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
-    if (t.includes('proper')) extra.push('✅PROPER');
-    if (t.includes('repack')) extra.push('♻️REPACK');
 
     return { quality, extra: extra.join('|'), lang };
 }
@@ -185,18 +126,12 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         .then(response => {
             if (response.data?.streams) {
                 let sourceStreams = [];
-                let qualityCount = {};
-
                 for (const stream of response.data.streams) {
                     const originalTitle = stream.title || '';
                     const info = getQualityInfo(originalTitle);
-                    
-                    qualityCount[info.quality] = (qualityCount[info.quality] || 0) + 1;
-                    if (qualityCount[info.quality] > 5) continue;
-
                     const size = getFileSize(originalTitle);
                     const seedsCount = getSeeders(originalTitle);
-                    const peerSite = getPeerSite(originalTitle || stream.name || '');
+                    const peerSite = getPeerSite(originalTitle); // Récupération du site
                     
                     let infoHash = stream.infoHash || '';
                     if (!infoHash && stream.url?.startsWith('magnet:')) {
@@ -205,11 +140,17 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     }
                     if (!infoHash && !stream.url) continue;
 
-                    // Nettoyage sommaire du nom du stream pour l'affichage en une ligne
-                    const cleanFileName = (stream.name || 'Unknown').split('\n')[0];
+                    // --- MODIFICATION ICI : NOM ET TITRE ---
+                    // Récupération du nom du fichier (on prend la première ligne du titre original)
+                    const fileName = (stream.name || 'Unknown File').split('\n')[0];
+                    const qualityTag = info.quality.split(':')[1] || 'HD';
 
                     sourceStreams.push({
-                        name: `${cleanFileName} ${info.quality.split(':')[1]}`,
+                        // Ligne 1 : Nom du fichier + Qualité (ex: Avatar.2024 1080p)
+                        name: `${fileName} ${qualityTag}`,
+                        // Ligne 2 : Taille | Seeds | Site
+                        // Ligne 3 : Langue
+                        // Ligne 4 : Extras
                         title: `${size} | 👤= ${seedsCount} | 🌐= ${peerSite}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
@@ -248,4 +189,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Link-Dz v2.5.8 Online`));
+app.listen(PORT, () => console.log(`⚡ Torrent♦️Dz Online`));
