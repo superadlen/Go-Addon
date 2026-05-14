@@ -123,10 +123,30 @@ function getQualityInfo(title) {
     else if (t.includes('720p')) quality = '🖥️:720p';
     else quality = '🎥:HD';
 
-    if (t.includes('bluray')) extra.push('💿BluRay');
+    if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
+    if (t.includes('remux')) extra.push('📀REMUX');
     if (t.includes('web-dl') || t.includes('webdl')) extra.push('🌐WEB-DL');
-    if (t.includes('hevc') || t.includes('x265')) extra.push('HEVC');
+    if (t.includes('webrip')) extra.push('🌍WEBRip');
+    if (t.includes('dvdrip')) extra.push('📼DVDRip');
+    if (t.includes('hdrip')) extra.push('🎞️HDRip');
+    if (t.includes('uhd')) extra.push('🖥️UHD');
+    if (t.includes('3d')) extra.push('🔅3D');
+    if (t.includes('amzn')) extra.push('🛒AMZN');
+    if (t.includes('hevc') || t.includes('x265') || t.includes('h265')) extra.push('HEVC');
     if (t.includes('x264')) extra.push('X264');
+    if (t.includes('10bit')) extra.push('🎨10BIT');
+    if (t.includes('hdr10')) extra.push('💯HDR10');
+    else if (t.includes('hdr')) extra.push('✨HDR');
+    if (t.includes('dolby vision') || t.includes(' dv ') || t.includes('.dv.')) extra.push('🌈DolbyVision');
+    if (t.includes('atmos')) extra.push('🎧Atmos');
+    if (t.includes('ddp5') || t.includes('ddp5.1')) extra.push('🔊DDP5.1');
+    if (t.includes('truehd')) extra.push('🎵TrueHD');
+    if (t.includes('dts')) extra.push('🔊DTS');
+    if (t.includes('aac')) extra.push('🔉AAC');
+    if (t.includes('sub') || t.includes('subs') || t.includes('subtitle')) extra.push('💬SUB');
+    if (t.includes('dual audio')) extra.push('🎚️Dual Audio');
+    if (t.includes('proper')) extra.push('✅PROPER');
+    if (t.includes('repack')) extra.push('♻️REPACK');
 
     return { quality, extra: extra.join('|'), lang };
 }
@@ -167,7 +187,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
                     sourceStreams.push({
                         // Affiche : Torrent-Dz:X (ligne 1) et QUALITE (ligne 2)
-                        name: `${source.name}\n${qualityText}`,
+                        name: `${source.name} |  ${qualityText}`,
                         // Affiche : Nom du fichier (ligne 1), puis Stats, puis Langue, puis Codecs
                         title: `${fileName}\n${size} | 👤= ${seedsCount} | 🌐= ${peerSite}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
