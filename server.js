@@ -245,5 +245,58 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     res.json(result);
 });
 
+// --- PAGE D'ACCUEIL / INSTALLATION ---
+app.get('/', (req, res) => {
+    const manifestUrl = `${req.protocol}://${req.get('host')}/manifest.json`;
+    const stremioUrl = manifestUrl.replace('https://', 'stremio://').replace('http://', 'stremio://');
+
+    res.send(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${MANIFEST.name} - Installation</title>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: white; text-align: center; padding: 50px; }
+            .container { max-width: 600px; margin: auto; background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+            img { width: 120px; border-radius: 20px; margin-bottom: 20px; }
+            h1 { color: #e50914; margin-bottom: 10px; }
+            p { color: #bbb; margin-bottom: 30px; }
+            .btn { display: inline-block; background: #e50914; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-bottom: 20px; transition: 0.3s; }
+            .btn:hover { background: #ff0a16; transform: scale(1.05); }
+            .copy-box { background: #2c2c2c; padding: 10px; border-radius: 5px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #444; }
+            input { background: transparent; border: none; color: #00d4ff; width: 80%; font-family: monospace; outline: none; }
+            button { background: #444; border: none; color: white; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+            button:hover { background: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <img src="${MANIFEST.logo}" alt="Logo">
+            <h1>${MANIFEST.name}</h1>
+            <p>${MANIFEST.description}</p>
+            <a href="${stremioUrl}" class="btn">INSTALLER SUR STREMIO</a>
+            <div class="copy-box">
+                <input type="text" value="${manifestUrl}" id="manifestLink" readonly>
+                <button onclick="copyLink()">Copier</button>
+            </div>
+            <p style="font-size: 12px; margin-top: 20px;">Version ${MANIFEST.version}</p>
+        </div>
+
+        <script>
+            function copyLink() {
+                var copyText = document.getElementById("manifestLink");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999);
+                document.execCommand("copy");
+                alert("Lien copié !");
+            }
+        </script>
+    </body>
+    </html>
+    `);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`⚡ Torrent♦️Dz v2.5.9 Online`));
