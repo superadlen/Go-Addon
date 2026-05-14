@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.6', 
+    version: '2.5.7', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -106,13 +106,22 @@ function getQualityInfo(title) {
         lang = `🎧= ${languages[code].flag}${suffix}`;
     }
 
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:UHD-4K';
-    else if (t.includes('1440p')) quality = '📺:FHD-2K';
-    else if (t.includes('1080p')) quality = '📺:1080p';
-    else if (t.includes('720p')) quality = '🖥️:720p';
-    else if (t.includes('3d')) quality = '👓:3D';
-    else if (t.includes('cam')) quality = '📱:CAM';
-    else quality = '🎥:HD';
+    if (t.includes('4320p') || t.includes('8k')) quality = '🪐:8K';
+else if (t.includes('2160p') || t.includes('4k') || t.includes('uhd')) quality = '🎬:UHD-4K';
+else if (t.includes('1440p') || t.includes('2k') || t.includes('qhd')) quality = '📺:FHD-2K';
+else if (t.includes('1080p') || t.includes('fhd') || t.includes('fullhd')) quality = '📺:1080p';
+else if (t.includes('900p')) quality = '💻:900p';
+else if (t.includes('720p')) quality = '🖥️:720p';
+else if (t.includes('576p')) quality = '📼:576p';
+else if (t.includes('480p')) quality = '📼:480p';
+else if (t.includes('360p')) quality = '📱:360p';
+else if (t.includes('240p')) quality = '📱:240p';
+else if (t.includes('3d')) quality = '👓:3D';
+else if (t.includes('hdrip')) quality = '💿:BluRay';
+else if (t.includes('web-dl')) quality = '📀:WEB-DL';
+else if (t.includes('webrip')) quality = '📡:WEBRip';
+else if (t.includes('cam')) quality = '📱:CAM';
+else quality = '🎥:HD';
 
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
     if (t.includes('remux')) extra.push('📀REMUX');
