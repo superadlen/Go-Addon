@@ -98,7 +98,7 @@ function getQualityInfo(title) {
         ja: { flag: '🇯🇵', names: ['japanese', ' ja ', ' jpn ', 'japonais'] },
         zh: { flag: '🇨🇳', names: ['chinese', ' zh ', ' chi ', 'chinois'] },
         ko: { flag: '🇰🇷', names: ['korean', ' ko ', ' kor ', 'coréen'] },
-        ar: { flag: '🇸🇦', names: ['arabic', ' ar ', ' ara ', 'arabe'] },
+        ar: { flag: '🇩🇿', names: ['arabic', ' ar ', ' ara ', 'arabe'] },
         hi: { flag: '🇮🇳', names: ['hindi', ' hi ', ' hin '] },
         bn: { flag: '🇧🇩', names: ['bengali', ' bn ', ' ben '] },
         vi: { flag: '🇻🇳', names: ['vietnamese', ' vi ', ' vie '] },
@@ -116,7 +116,6 @@ function getQualityInfo(title) {
         no: { flag: '🇳🇴', names: ['norwegian', ' no ', ' nor '] },
         fi: { flag: '🇫🇮', names: ['finnish', ' fi ', ' fin '] },
         el: { flag: '🇬🇷', names: ['greek', ' el ', ' gre '] },
-        he: { flag: '🇮🇱', names: ['hebrew', ' he ', ' heb '] },
         fa: { flag: '🇮🇷', names: ['persian', ' fa ', ' per '] },
         sw: { flag: '🇹🇿', names: ['swahili', ' sw ', ' swa '] },
         ta: { flag: '🇮🇳', names: ['tamil', ' ta ', ' tam '] },
@@ -139,6 +138,12 @@ function getQualityInfo(title) {
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
     else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
+    else if (t.includes('3d')) quality = '👓:3D';
+    else if (t.includes('hdrip')) quality = '💿:BluRay';
+    else if (t.includes('web-dl')) quality = '📀:WEB-DL';
+    else if (t.includes('webrip')) quality = '📡:WEBRip';
+    else if (t.includes('dvdrip')) quality = '📡:DVDRip';
+    else if (t.includes('cam')) quality = '📱:CAM';
     else quality = '🎥:HD';
 
     if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
