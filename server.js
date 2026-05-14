@@ -120,6 +120,7 @@ else if (t.includes('3d')) quality = '👓:3D';
 else if (t.includes('hdrip')) quality = '💿:BluRay';
 else if (t.includes('web-dl')) quality = '📀:WEB-DL';
 else if (t.includes('webrip')) quality = '📡:WEBRip';
+else if (t.includes('dvdrip')) quality = '📡:DVDRip';
 else if (t.includes('cam')) quality = '📱:CAM';
 else quality = '🎥:HD';
 
