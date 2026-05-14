@@ -7,12 +7,12 @@ const app = express();
 app.use(cors());
 
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 120 });
-const TIMEOUT = 6000;
+const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.4', 
-    name: '♦️Link-Dz',
+    version: '2.5.5', 
+    name: 'Link♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
