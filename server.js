@@ -110,6 +110,7 @@ function getQualityInfo(title) {
     else if (t.includes('1440p')) quality = '📺:FHD-2K';
     else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
+    else if (t.includes('3d')) quality = '👓:3D';
     else if (t.includes('cam')) quality = '📱:CAM';
     else quality = '🎥:HD';
 
