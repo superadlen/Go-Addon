@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.8', 
+    version: '2.5.9', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -32,12 +32,12 @@ const SOURCES = [
 
 function getFileSize(title) {
     const match = (title || '').match(/(\d+(?:\.\d+)?\s*(?:GB|MB|GiB|MiB))/i);
-    return match ? `💾= ${match[0].toUpperCase()}` : '💾= N/A';
+    return match ? `💾= ${match.toUpperCase()}` : '💾= N/A';
 }
 
 function getSeeders(title) {
     const match = (title || '').match(/👤\s*(\d+)/);
-    return match ? parseInt(match[1]) : 0;
+    return match ? parseInt(match) : 0;
 }
 
 function getQualityScore(text) {
@@ -83,7 +83,7 @@ function getQualityInfo(title) {
         no: { flag: '🇳🇴', names: ['norwegian', ' no ', ' nor '] },
         fi: { flag: '🇫🇮', names: ['finnish', ' fi ', ' fin '] },
         el: { flag: '🇬🇷', names: ['greek', ' el ', ' gre '] },
-        he: { flag: '🇮🇱', names: ['hebrew', ' he ', ' heb '] },
+        he: { flag: '🇮🇱', network: ['hebrew', ' he ', ' heb '] },
         fa: { flag: '🇮🇷', names: ['persian', ' fa ', ' per '] },
         sw: { flag: '🇹🇿', names: ['swahili', ' sw ', ' swa '] },
         ta: { flag: '🇮🇳', names: ['tamil', ' ta ', ' tam '] },
@@ -103,7 +103,7 @@ function getQualityInfo(title) {
     } else if (t.includes('multi')) {
         lang = '🎧:= 🌍 MULTI ';
     } else if (found.length === 1) {
-        const code = found[0];
+        const code = found;
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
         lang = `🎧= ${languages[code].flag}${suffix}`;
     }
@@ -192,12 +192,12 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     let infoHash = stream.infoHash || '';
                     if (!infoHash && stream.url?.startsWith('magnet:')) {
                         const match = stream.url.match(/btih:([a-fA-F0-9]{40})/);
-                        if (match) infoHash = match[1];
+                        if (match) infoHash = match;
                     }
                     if (!infoHash && !stream.url) continue;
 
                     sourceStreams.push({
-                        name: `${source.name} \n${info.quality.split(':')[1]}`,
+                        name: `${source.name} \n${info.quality.split(':')}`,
                         title: `${size}  |👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
