@@ -11,23 +11,21 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.9', 
+    version: '2.5.7', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
     idPrefixes: ['tt', 'tmdb:', 'kitsu'],
     catalogs: [],
-    logo: 'https://i.pinimg.com/736x/25/42/be/2542be2c309b788b081c80d0d734e571.jpg'
+    logo: 'https://i.pinimg.com/1200x/45/26/88/45268878ba1c1123ee8621b2d0081fab.jpg'
 };
 
 const SOURCES = [
     { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Torrent-Dz:1' },
     { url: 'https://filmora-production.up.railway.app', name: 'Torrent-Dz:2' },
     { url: 'https://str.zmb.lat/lite', name: 'Torrent-Dz:3' },
-    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz:4' },
-    { url: 'https://stremthru.stremio.ru/stremio/torz/eyJpbmRleGVycyI6bnVsbCwic3RvcmVzIjpbeyJjIjoicDJwIiwidCI6IiJ9XSwiZmlsdGVyIjoiRmlsZS5TaXplIFx1MDAzYz0gXCI4IEdCXCIgXHUwMDI2XHUwMDI2IFNlZWRlcnMgXHUwMDNlPSA1MCJ9/', name: 'Torrent-Dz:5' },
-    { url: 'https://thepiratebay-plus.strem.fun', name: 'Torrent-Dz:6' },
+    { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz:4' }
 ];
 
 function getFileSize(title) {
@@ -177,12 +175,11 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         .then(response => {
             if (response.data?.streams) {
                 let sourceStreams = [];
-                let qualityCount = {}; // Pour limiter à 5 par qualité
+                let qualityCount = {};
 
                 for (const stream of response.data.streams) {
                     const info = getQualityInfo(stream.title || '');
                     
-                    // Limite : 5 par qualité
                     qualityCount[info.quality] = (qualityCount[info.quality] || 0) + 1;
                     if (qualityCount[info.quality] > 5) continue;
 
@@ -204,7 +201,6 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
                     });
 
-                    // Limite : 15 par source
                     if (sourceStreams.length >= 20) break;
                 }
                 return sourceStreams;
@@ -234,6 +230,333 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     const result = { streams: allStreams };
     cache.set(cacheKey, result);
     res.json(result);
+});
+
+// PAGE D'INSTALLATION POUR STREMIO ET NUVIO
+app.get('/', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Torrent♦️Dz - Addon Stremio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 30px 25px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            font-size: 2.2em;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            color: #888;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        .manifest-box {
+            background: #0a0a0a;
+            border-radius: 16px;
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+
+        .manifest-label {
+            color: #4ecdc4;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .manifest-url {
+            background: #000;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+            color: #ff6b6b;
+            border: 1px solid #333;
+        }
+
+        .btn-copy {
+            background: #2c2c3e;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7em;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: #4ecdc4;
+            color: #000;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 12px;
+        }
+
+        .btn-stremio {
+            background: linear-gradient(135deg, #6b46c1, #805ad5);
+            color: white;
+        }
+
+        .btn-stremio:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(107,70,193,0.4);
+        }
+
+        .btn-nuvio {
+            background: linear-gradient(135deg, #e53e3e, #ed64a6);
+            color: white;
+        }
+
+        .btn-nuvio:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(229,62,62,0.4);
+        }
+
+        .btn-manual {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-manual:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .info {
+            background: rgba(78,205,196,0.1);
+            border-left: 3px solid #4ecdc4;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-size: 0.8em;
+            color: #ccc;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.75em;
+            color: #4ecdc4;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.7em;
+            color: #555;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #4ecdc4;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.85em;
+            font-weight: bold;
+            transition: transform 0.3s;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 20px;
+            }
+            .logo h1 {
+                font-size: 1.6em;
+            }
+            .manifest-url {
+                font-size: 0.65em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <h1>🔗 Torrent♦️Dz</h1>
+            <p>Multi-Sources Rapide - Films & Series</p>
+            <p style="font-size:0.7em;color:#4ecdc4">By Superadlen DZ</p>
+        </div>
+
+        <div class="manifest-box">
+            <div class="manifest-label">
+                <span>📋 LIEN DU MANIFEST</span>
+                <button class="btn-copy" onclick="copyManifest()">Copier</button>
+            </div>
+            <div class="manifest-url" id="manifestUrl">
+                chargement...
+            </div>
+        </div>
+
+        <a href="#" id="stremioLink" class="btn btn-stremio">
+            🎬 Installer sur Stremio
+        </a>
+
+        <button class="btn btn-nuvio" onclick="installNuvio()">
+            📱 Installer sur Nuvio
+        </button>
+
+        <button class="btn btn-manual" onclick="copyManifest()">
+            📋 Copier le lien manifest
+        </button>
+
+        <div class="info">
+            💡 <strong>Installation manuelle :</strong><br>
+            1. Copiez le lien ci-dessus<br>
+            2. Ouvrez Stremio → Modules complémentaires<br>
+            3. Collez le lien et installez
+        </div>
+
+        <div class="status" id="status">
+            ✅ Addon prêt
+        </div>
+
+        <div class="footer">
+            v2.5.7 | Torrent + DHT Network
+        </div>
+    </div>
+
+    <div id="toast" class="toast">✅ Copié !</div>
+
+    <script>
+        function getBaseUrl() {
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            return protocol + '//' + host;
+        }
+
+        function getManifestUrl() {
+            return getBaseUrl() + '/manifest.json';
+        }
+
+        function copyManifest() {
+            const url = getManifestUrl();
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('✅ Lien copié !');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = url;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ Lien copié !');
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function installStremio() {
+            const manifestUrl = getManifestUrl();
+            const stremioUrl = 'stremio://' + manifestUrl.replace(/^https?:\/\//, '') + '/manifest.json';
+            window.location.href = stremioUrl;
+            
+            setTimeout(() => {
+                window.location.href = manifestUrl;
+            }, 500);
+        }
+
+        function installNuvio() {
+            const manifestUrl = getManifestUrl();
+            const nuvioUrl = 'nuvio://install?addon=' + encodeURIComponent(manifestUrl);
+            window.location.href = nuvioUrl;
+            
+            showToast('🔄 Ouverture de Nuvio...');
+            
+            setTimeout(() => {
+                copyManifest();
+            }, 1000);
+        }
+
+        document.getElementById('stremioLink').onclick = function(e) {
+            e.preventDefault();
+            installStremio();
+        };
+
+        const manifestUrl = getManifestUrl();
+        document.getElementById('manifestUrl').textContent = manifestUrl;
+        
+        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+            document.getElementById('status').innerHTML = '⚠️ HTTPS recommandé pour Stremio';
+            document.getElementById('status').style.color = '#f39c12';
+        }
+    </script>
+</body>
+</html>
+    `);
 });
 
 const PORT = process.env.PORT || 3000;
