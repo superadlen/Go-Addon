@@ -32,12 +32,12 @@ const SOURCES = [
 
 function getFileSize(title) {
     const match = (title || '').match(/(\d+(?:\.\d+)?\s*(?:GB|MB|GiB|MiB))/i);
-    return match ? `💾= ${match.toUpperCase()}` : '💾= N/A';
+    return match ? `💾= ${match[0].toUpperCase()}` : '💾= N/A';
 }
 
 function getSeeders(title) {
     const match = (title || '').match(/👤\s*(\d+)/);
-    return match ? parseInt(match) : 0;
+    return match ? parseInt(match[1]) : 0;
 }
 
 function getQualityScore(text) {
@@ -83,7 +83,7 @@ function getQualityInfo(title) {
         no: { flag: '🇳🇴', names: ['norwegian', ' no ', ' nor '] },
         fi: { flag: '🇫🇮', names: ['finnish', ' fi ', ' fin '] },
         el: { flag: '🇬🇷', names: ['greek', ' el ', ' gre '] },
-        he: { flag: '🇮🇱', network: ['hebrew', ' he ', ' heb '] },
+        he: { flag: '🇮🇱', names: ['hebrew', ' he ', ' heb '] },
         fa: { flag: '🇮🇷', names: ['persian', ' fa ', ' per '] },
         sw: { flag: '🇹🇿', names: ['swahili', ' sw ', ' swa '] },
         ta: { flag: '🇮🇳', names: ['tamil', ' ta ', ' tam '] },
@@ -103,7 +103,7 @@ function getQualityInfo(title) {
     } else if (t.includes('multi')) {
         lang = '🎧:= 🌍 MULTI ';
     } else if (found.length === 1) {
-        const code = found;
+        const code = found[0];
         const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
         lang = `🎧= ${languages[code].flag}${suffix}`;
     }
@@ -192,12 +192,12 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     let infoHash = stream.infoHash || '';
                     if (!infoHash && stream.url?.startsWith('magnet:')) {
                         const match = stream.url.match(/btih:([a-fA-F0-9]{40})/);
-                        if (match) infoHash = match;
+                        if (match) infoHash = match[1];
                     }
                     if (!infoHash && !stream.url) continue;
 
                     sourceStreams.push({
-                        name: `${source.name} \n${info.quality.split(':')}`,
+                        name: `${source.name} \n${info.quality.split(':')[1]}`,
                         title: `${size}  |👤= ${seedsCount}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
