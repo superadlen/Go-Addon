@@ -11,14 +11,14 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.9', 
+    version: '2.5.8', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
     idPrefixes: ['tt', 'tmdb:', 'kitsu'],
     catalogs: [],
-    logo: 'https://i.pinimg.com/736x/25/42/be/2542be2c309b788b081c80d0d734e571.jpg'
+    logo: 'https://i.pinimg.com/1200x/45/26/88/45268878ba1c1123ee8621b2d0081fab.jpg'
 };
 
 const SOURCES = [
