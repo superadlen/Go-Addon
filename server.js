@@ -18,7 +18,7 @@ const MANIFEST = {
     types: ['movie', 'series'],
     idPrefixes: ['tt', 'tmdb:', 'kitsu'],
     catalogs: [],
-    logo: 'https://i.pinimg.com/1200x/45/26/88/45268878ba1c1123ee8621b2d0081fab.jpg'
+    logo: 'https://i.pinimg.com/736x/25/42/be/2542be2c309b788b081c80d0d734e571.jpg'
 };
 
 const SOURCES = [
