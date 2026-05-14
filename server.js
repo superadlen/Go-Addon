@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.6.0', 
+    version: '2.6.1', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -139,10 +139,6 @@ function getQualityInfo(title) {
     else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
     else if (t.includes('3d')) quality = '👓:3D';
-    else if (t.includes('hdrip')) quality = '💿:BluRay';
-    else if (t.includes('web-dl')) quality = '📀:WEB-DL';
-    else if (t.includes('webrip')) quality = '📡:WEBRip';
-    else if (t.includes('dvdrip')) quality = '📡:DVDRip';
     else if (t.includes('cam')) quality = '📱:CAM';
     else quality = '🎥:HD';
 
