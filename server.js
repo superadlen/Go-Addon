@@ -30,7 +30,6 @@ const SOURCES = [
     { url: 'https://thepiratebay-plus.strem.fun', name: 'Torrent-Dz:6' },
 ];
 
-// --- NOUVELLE FONCTION PEER SITE ---
 function getPeerSite(title) {
     const t = (title || '').toLowerCase();
     if (t.includes('yts') || t.includes('yify') || t.includes('yifi')) return 'YTS';
@@ -73,12 +72,6 @@ function getQualityInfo(title) {
     const languages = {
         fr: { flag: '🇫🇷', names: ['french', ' vf ', ' vff ', 'francais'], label: 'VF' },
         en: { flag: '🇺🇸', names: ['english', ' en ', ' eng ', 'anglais'], label: 'VO' },
-        es: { flag: '🇪🇸', names: ['spanish', ' es ', ' spa ', 'espanol'] },
-        it: { flag: '🇮🇹', names: ['italian', ' it ', ' ita ', 'italiano'] },
-        pt: { flag: '🇵🇹', names: ['portuguese', ' pt ', ' por ', 'portugues'] },
-        ru: { flag: '🇷🇺', names: ['russian', ' ru ', ' rus ', 'russe'] },
-        de: { flag: '🇩🇪', names: ['german', ' de ', ' ger ', 'deutsch'] },
-        ja: { flag: '🇯🇵', names: ['japanese', ' ja ', ' jpn ', 'japonais'] },
         ar: { flag: '🇸🇦', names: ['arabic', ' ar ', ' ara ', 'arabe'] }
     };
 
@@ -87,14 +80,12 @@ function getQualityInfo(title) {
         .map(([code]) => code);
 
     if (found.length >= 2) {
-        const flags = found.map(code => languages[code].flag).join('/');
-        lang = `🎧= ${flags} `;
+        lang = `🎧= ${found.map(code => languages[code].flag).join('/')} `;
     } else if (t.includes('multi')) {
         lang = '🎧= 🌍 MULTI ';
     } else if (found.length === 1) {
         const code = found[0];
-        const suffix = code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '');
-        lang = `🎧= ${languages[code].flag}${suffix}`;
+        lang = `🎧= ${languages[code].flag}${code === 'fr' ? ' VF' : (code === 'en' ? ' VO' : '')}`;
     }
 
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
@@ -127,11 +118,11 @@ app.get('/stream/:type/:id.json', async (req, res) => {
             if (response.data?.streams) {
                 let sourceStreams = [];
                 for (const stream of response.data.streams) {
-                    const originalTitle = stream.title || '';
-                    const info = getQualityInfo(originalTitle);
-                    const size = getFileSize(originalTitle);
-                    const seedsCount = getSeeders(originalTitle);
-                    const peerSite = getPeerSite(originalTitle); // Récupération du site
+                    const rawTitle = stream.title || '';
+                    const info = getQualityInfo(rawTitle);
+                    const size = getFileSize(rawTitle);
+                    const seedsCount = getSeeders(rawTitle);
+                    const peerSite = getPeerSite(rawTitle || stream.name || '');
                     
                     let infoHash = stream.infoHash || '';
                     if (!infoHash && stream.url?.startsWith('magnet:')) {
@@ -140,18 +131,15 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     }
                     if (!infoHash && !stream.url) continue;
 
-                    // --- MODIFICATION ICI : NOM ET TITRE ---
-                    // Récupération du nom du fichier (on prend la première ligne du titre original)
-                    const fileName = (stream.name || 'Unknown File').split('\n')[0];
-                    const qualityTag = info.quality.split(':')[1] || 'HD';
+                    // Extraction du nom de fichier propre (sans les sauts de ligne de la source)
+                    const fileName = rawTitle.split('\n')[0] || stream.name || 'Unknown File';
+                    const qualityText = info.quality.split(':')[1].toUpperCase();
 
                     sourceStreams.push({
-                        // Ligne 1 : Nom du fichier + Qualité (ex: Avatar.2024 1080p)
-                        name: `${fileName} ${qualityTag}`,
-                        // Ligne 2 : Taille | Seeds | Site
-                        // Ligne 3 : Langue
-                        // Ligne 4 : Extras
-                        title: `${size} | 👤= ${seedsCount} | 🌐= ${peerSite}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
+                        // Affiche : Torrent-Dz:X (ligne 1) et QUALITE (ligne 2)
+                        name: `${source.name}\n${qualityText}`,
+                        // Affiche : Nom du fichier (ligne 1), puis Stats, puis Langue, puis Codecs
+                        title: `${fileName}\n${size} | 👤= ${seedsCount} | 🌐= ${peerSite}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
@@ -189,4 +177,4 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Torrent♦️Dz Online`));
+app.listen(PORT, () => console.log(`⚡ Torrent♦️Dz v2.5.9 Online`));
