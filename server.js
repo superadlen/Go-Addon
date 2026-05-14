@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 120 });
-const TIMEOUT = 5000;
+const TIMEOUT = 6000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
@@ -40,8 +40,8 @@ function getSeeders(title) {
 
 function getQualityScore(text) {
     const t = (text || '').toLowerCase();
-    if (t.includes('1080p')) return 10;
-    if (t.includes('4k') || t.includes('2160p')) return 7;
+    if (t.includes('1080p')) return 7;
+    if (t.includes('4k') || t.includes('2160p')) return 10;
     if (t.includes('720p')) return 5;
     return 1;
 }
