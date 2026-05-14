@@ -26,7 +26,7 @@ const SOURCES = [
     { url: 'https://filmora-production.up.railway.app', name: 'Torrent-Dz:2' },
     { url: 'https://str.zmb.lat/lite', name: 'Torrent-Dz:3' },
     { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz:4' }
-    { url: 'https://hdhub.thevolecitor.qzz.io/eyJ0b3Jib3giOiJ1bnNldCIsInF1YWxpdGllcyI6IjIxNjBwLDEwODBwLDcyMHAiLCJzb3J0IjoiZGVzYyJ9/', name: 'Torrent-Dz:5' }
+    { url: 'https://hdhub.thevolecitor.qzz.io/', name: 'Torrent-Dz:5' }
     { url: 'https://stremthru.stremio.ru/stremio/torz/eyJpbmRleGVycyI6bnVsbCwic3RvcmVzIjpbeyJjIjoicDJwIiwidCI6IiJ9XSwiZmlsdGVyIjoiRmlsZS5TaXplIFx1MDAzYz0gXCI4IEdCXCIgXHUwMDI2XHUwMDI2IFNlZWRlcnMgXHUwMDNlPSA1MCJ9/', name: 'Torrent-Dz:6' }
     { url: 'https://corsaro.stremio.dpdns.org/eyJ0bWRiX2tleSI6IjU0NjJmNzg0NjlmM2Q4MGJmNTIwMTY0NTI5NGMxNmU0IiwidXNlX2NvcnNhcm9uZXJvIjp0cnVlLCJ1c2VfdWluZGV4Ijp0cnVlLCJ1c2Vfa25hYmVuIjp0cnVlLCJ1c2VfdG9ycmVudGdhbGF4eSI6dHJ1ZSwidXNlX3RvcnJlbnRpbyI6dHJ1ZSwidXNlX21lZGlhZnVzaW9uIjp0cnVlLCJ1c2VfY29tZXQiOnRydWUsInVzZV9zdHJlbXRocnVfdG9yeiI6dHJ1ZSwidXNlX21ldGVvciI6dHJ1ZSwidXNlX3JhcmJnIjp0cnVlLCJ1c2VfamFja2V0dCI6ZmFsc2UsImZ1bGxfaXRhIjpmYWxzZSwiZGJfb25seSI6dHJ1ZSwidXNlX2dsb2JhbF9jYWNoZSI6dHJ1ZSwib25seV9kZWJyaWRfY2FjaGUiOmZhbHNlLCJoeWJyaWRfbW9kZSI6dHJ1ZSwibWF4X3Jlc19saW1pdCI6NSwiZXhjbHVkZV83MjBwIjp0cnVlLCJleGNsdWRlX3NkIjp0cnVlLCJleGNsdWRlX3Vua25vd24iOnRydWUsImZvcm1hdHRlcl9wcmVzZXQiOiJpdGFsaWFubyJ9/', name: 'Torrent-Dz:7' }
 ];
