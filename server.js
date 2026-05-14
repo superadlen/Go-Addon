@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.5.9', 
+    version: '2.6.0', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -26,8 +26,6 @@ const SOURCES = [
     { url: 'https://filmora-production.up.railway.app', name: 'Torrent-Dz:2' },
     { url: 'https://str.zmb.lat/lite', name: 'Torrent-Dz:3' },
     { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz:4' },
-    { url: 'https://stremthru.stremio.ru/stremio/torz/eyJpbmRleGVycyI6bnVsbCwic3RvcmVzIjpbeyJjIjoicDJwIiwidCI6IiJ9XSwiZmlsdGVyIjoiRmlsZS5TaXplIFx1MDAzYz0gXCI4IEdCXCIgXHUwMDI2XHUwMDI2IFNlZWRlcnMgXHUwMDNlPSA1MCJ9/', name: 'Torrent-Dz:5' },
-    { url: 'https://thepiratebay-plus.strem.fun', name: 'Torrent-Dz:6' },
 ];
 
 function getPeerSite(title) {
@@ -41,7 +39,27 @@ function getPeerSite(title) {
     if (t.includes('eztv')) return 'EZTV';
     if (t.includes('nyaa')) return 'NYAA';
     if (t.includes('torrentleech')) return 'TL';
-    if (t.includes('kickass')) return 'KAT';
+    if (t.includes('kickass') || t.includes('kat')) return 'KAT';
+    if (t.includes('zooqle')) return 'ZOOQLE';
+    if (t.includes('limetorrents')) return 'LIME';
+    if (t.includes('torlock')) return 'TORLOCK';
+    if (t.includes('torrentdownloads')) return 'TD';
+    if (t.includes('magnetdl')) return 'MAGNETDL';
+    if (t.includes('idope')) return 'IDOPE';
+    if (t.includes('rutracker')) return 'RUTRACKER';
+    if (t.includes('solidtorrents')) return 'SOLID';
+    if (t.includes('bitsearch')) return 'BITSEARCH';
+    if (t.includes('torrentfunk')) return 'TFUNK';
+    if (t.includes('glodls')) return 'GLODLS';
+    if (t.includes('ettv')) return 'ETTV';
+    if (t.includes('psa')) return 'PSA';
+    if (t.includes('rmteam')) return 'RMTEAM';
+    if (t.includes('galaxyrg')) return 'GALAXYRG';
+    if (t.includes('megusta')) return 'MEGUSTA';
+    if (t.includes('tigole')) return 'TIGOLE';
+    if (t.includes('qxr')) return 'QXR';
+    if (t.includes('utr')) return 'UTR';
+    
     return 'P2P';
 }
 
