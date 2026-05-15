@@ -12,7 +12,7 @@ const TIMEOUT = 7000;
 const MANIFEST = {
     id: 'org.golink.payload',
     version: '2.6.6',
-    name: 'Torrent♦️Dz',
+    name: 'Torrent♦️GT',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
     types: ['movie', 'series'],
