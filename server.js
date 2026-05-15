@@ -30,9 +30,35 @@ const SOURCES = [
 
 function getPeerSite(title) {
     const t = (title || '').toLowerCase();
-    if (t.includes('yts') || t.includes('yify')) return 'YTS';
+    if (t.includes('yts') || t.includes('yify') || t.includes('yifi')) return 'YTS';
+    if (t.includes('thepiratebay') || t.includes('tpb')) return 'TPB';
     if (t.includes('1337x')) return '1337X';
-    if (t.includes('torrentgalaxy')) return 'TGX';
+    if (t.includes('rutor')) return 'RUTOR';
+    if (t.includes('rarbg')) return 'RARBG';
+    if (t.includes('torrentgalaxy') || t.includes('tgx')) return 'TGX';
+    if (t.includes('eztv')) return 'EZTV';
+    if (t.includes('nyaa')) return 'NYAA';
+    if (t.includes('torrentleech')) return 'TL';
+    if (t.includes('kickass') || t.includes('kat')) return 'KAT';
+    if (t.includes('zooqle')) return 'ZOOQLE';
+    if (t.includes('limetorrents')) return 'LIME';
+    if (t.includes('torlock')) return 'TORLOCK';
+    if (t.includes('torrentdownloads')) return 'TD';
+    if (t.includes('magnetdl')) return 'MAGNETDL';
+    if (t.includes('idope')) return 'IDOPE';
+    if (t.includes('rutracker')) return 'RUTRACKER';
+    if (t.includes('solidtorrents')) return 'SOLID';
+    if (t.includes('bitsearch')) return 'BITSEARCH';
+    if (t.includes('torrentfunk')) return 'TFUNK';
+    if (t.includes('glodls')) return 'GLODLS';
+    if (t.includes('ettv')) return 'ETTV';
+    if (t.includes('psa')) return 'PSA';
+    if (t.includes('rmteam')) return 'RMTEAM';
+    if (t.includes('galaxyrg')) return 'GALAXYRG';
+    if (t.includes('megusta')) return 'MEGUSTA';
+    if (t.includes('tigole')) return 'TIGOLE';
+    if (t.includes('qxr')) return 'QXR';
+    if (t.includes('utr')) return 'UTR';
     return 'P2P';
 }
 
