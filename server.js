@@ -28,36 +28,12 @@ const SOURCES = [
     { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz: S4' },
 ];
 
-/* ================= FAKE TORRENT FILTER ================= */
-function isFakeTorrent(title) {
-    if (!title) return true;
-
-    const t = title.toLowerCase();
-
-    if (t.includes('sample')) return true;
-    if (t.includes('trailer')) return true;
-    if (t.includes('preview')) return true;
-    if (t.includes('fake')) return true;
-    if (t.includes('nfo')) return true;
-    if (t.includes('readme')) return true;
-
-    const sizeMatch = t.match(/(\d+(?:\.\d+)?)\s*(mb|kb)/i);
-    if (sizeMatch) {
-        const size = parseFloat(sizeMatch[1]);
-        const unit = sizeMatch[2].toLowerCase();
-
-        if (unit === 'kb') return true;
-        if (unit === 'mb' && size < 50) return true;
-    }
-
-    return false;
-}
+/* ================= HELPERS ================= */
 
 function getPeerSite(title) {
     const t = (title || '').toLowerCase();
-    if (t.includes('yts') || t.includes('yify') || t.includes('yifi')) return 'YTS';
-    if (t.includes('thepiratebay') || t.includes('tpb')) return 'TPB';
-    if (t.includes('1337x')) return '1337X';
+    if (t.includes('yts')) return 'YTS';
+    if (t.includes('tpb')) return 'TPB';
     return 'P2P';
 }
 
@@ -65,7 +41,6 @@ function getFileSize(title) {
     if (!title) return null;
 
     const t = title.replace(/,/g, '.');
-
     const match = t.match(/\b(\d+(?:\.\d+)?)\s*(TB|GB|MB|KB|TIB|GIB|MIB|KIB)\b/i);
 
     if (!match) return null;
@@ -79,19 +54,13 @@ function getFileSize(title) {
         .replace('MIB', 'MB')
         .replace('KIB', 'KB');
 
-    size = Number(size % 1 === 0 ? size.toFixed(0) : size.toFixed(2));
-
     return `💾= ${size}${unit}`;
 }
 
 function getSeeders(title) {
     if (!title) return 0;
-
-    const t = String(title).toLowerCase();
-    if (t.includes('unknown')) return 0;
-
-    const match = t.match(/(?:👤|👥|seeders?|seeds?|s)\s*[:=]?\s*(\d+)/i);
-    return match ? Number(match[1]) : 0;
+    const match = String(title).match(/👤\s*(\d+)/);
+    return match ? parseInt(match[1]) : 0;
 }
 
 function getQualityScore(text) {
@@ -100,21 +69,6 @@ function getQualityScore(text) {
     if (t.includes('1080p')) return 7;
     if (t.includes('720p')) return 5;
     return 1;
-}
-
-function getQualityInfo(title) {
-    const t = (title || '').toLowerCase();
-
-    let quality = '';
-    let extra = [];
-    let lang = '🎧= ❓🔉';
-
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
-    else if (t.includes('1080p')) quality = '📺:1080p';
-    else if (t.includes('720p')) quality = '🖥️:720p';
-    else quality = '🎥:HD';
-
-    return { quality, extra: extra.join('|'), lang };
 }
 
 /* ================= STREAM ================= */
@@ -130,24 +84,28 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         axios.get(`${source.url}/stream/${type}/${id}.json`, {
             timeout: TIMEOUT,
             headers: { 'User-Agent': 'Mozilla/5.0' }
-        }).then(response => {
+        })
+        .then(response => {
 
-            if (!response.data?.streams) return [];
+            /* ================= DEAD SOURCE FILTER ================= */
+            if (
+                !response ||
+                !response.data ||
+                !Array.isArray(response.data.streams)
+            ) {
+                return [];
+            }
 
-            const sourceQualityCounts = {};
             const sourceStreams = [];
+            const sourceQualityCounts = {};
 
             for (const stream of response.data.streams) {
-                const rawTitle = stream.title || '';
-
-                /* ❌ FAKE FILTER */
-                if (isFakeTorrent(rawTitle)) continue;
+                const rawTitle = stream.title || stream.name || '';
 
                 const size = getFileSize(rawTitle);
                 if (!size) continue;
 
-                const info = getQualityInfo(rawTitle);
-                const qTag = info.quality.split(':')[1].toUpperCase();
+                const qTag = (rawTitle.match(/(4k|2160p|1080p|720p)/i) || ['HD'])[0].toUpperCase();
 
                 sourceQualityCounts[qTag] = (sourceQualityCounts[qTag] || 0) + 1;
                 if (sourceQualityCounts[qTag] > 5) continue;
@@ -160,13 +118,14 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     const match = stream.url.match(/btih:([a-fA-F0-9]{40})/);
                     if (match) infoHash = match[1];
                 }
+
                 if (!infoHash && !stream.url) continue;
 
                 const fileName = rawTitle.split('\n')[0] || 'Unknown File';
 
                 sourceStreams.push({
                     name: `${source.name} | ${qTag}`,
-                    title: `${fileName}\n${size} | 👤= ${seedsCount} | 🌐= ${peerSite}\n${info.lang}`,
+                    title: `${fileName}\n${size} | 👤= ${seedsCount} | 🌐= ${peerSite}`,
                     infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                     url: !infoHash ? stream.url : undefined,
                     behaviorHints: { notWebReady: true }
@@ -174,7 +133,11 @@ app.get('/stream/:type/:id.json', async (req, res) => {
             }
 
             return sourceStreams;
-        }).catch(() => [])
+        })
+        .catch(() => {
+            /* ================= DEAD SOURCE ================= */
+            return [];
+        })
     );
 
     const results = await Promise.all(promises);
@@ -192,8 +155,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         const qA = getQualityScore(a.title);
         const qB = getQualityScore(b.title);
         if (qB !== qA) return qB - qA;
-
-        return getSeeders(a.title) - getSeeders(b.title);
+        return getSeeders(b.title) - getSeeders(a.title);
     });
 
     const result = { streams: allStreams };
