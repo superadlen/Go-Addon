@@ -64,7 +64,7 @@ function getPeerSite(title) {
 }
 
 function getFileSize(title) {
-    if (!title) return '💾= N/A';
+    if (!title) return null;
 
     const t = title.replace(/,/g, '.');
 
@@ -72,7 +72,8 @@ function getFileSize(title) {
         /\b(\d+(?:\.\d+)?)\s*(TB|GB|MB|KB|TIB|GIB|MIB|KIB)\b/i
     );
 
-    if (!match) return '💾= N/A';
+    // IMPORTANT: si pas de taille => NULL (pour pouvoir filtrer après)
+    if (!match) return null;
 
     let size = parseFloat(match[1]);
     let unit = match[2].toUpperCase();
