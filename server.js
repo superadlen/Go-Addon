@@ -79,13 +79,41 @@ function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
-    let lang = '🎧= ❓';
+    let lang = '🎧= ❓Muti';
 
     const languages = {
-        fr: { flag: '🇫🇷', names: ['french','vf','fr'] },
-        en: { flag: '🇺🇸', names: ['english','en'] },
-        ar: { flag: '🇩🇿', names: ['arabic','ar'] },
-        es: { flag: '🇪🇸', names: ['spanish','es'] }
+        fr: { flag: '🇫🇷', names: ['french', ' vf ', ' vff ', 'francais'], label: 'VF' },
+        en: { flag: '🇺🇸', names: ['english', ' en ', ' eng ', 'anglais'], label: 'VO' },
+        es: { flag: '🇪🇸', names: ['spanish', ' es ', ' spa ', 'espanol'] },
+        it: { flag: '🇮🇹', names: ['italian', ' it ', ' ita ', 'italiano'] },
+        pt: { flag: '🇵🇹', names: ['portuguese', ' pt ', ' por ', 'portugues'] },
+        ru: { flag: '🇷🇺', names: ['russian', ' ru ', ' rus ', 'russe'] },
+        de: { flag: '🇩🇪', names: ['german', ' de ', ' ger ', 'deutsch'] },
+        ja: { flag: '🇯🇵', names: ['japanese', ' ja ', ' jpn ', 'japonais'] },
+        zh: { flag: '🇨🇳', names: ['chinese', ' zh ', ' chi ', 'chinois'] },
+        ko: { flag: '🇰🇷', names: ['korean', ' ko ', ' kor ', 'coréen'] },
+        ar: { flag: '🇩🇿', names: ['arabic', ' ar ', ' ara ', 'arabe'] },
+        hi: { flag: '🇮🇳', names: ['hindi', ' hi ', ' hin '] },
+        bn: { flag: '🇧🇩', names: ['bengali', ' bn ', ' ben '] },
+        vi: { flag: '🇻🇳', names: ['vietnamese', ' vi ', ' vie '] },
+        th: { flag: '🇹🇭', names: ['thai', ' th ', ' tha '] },
+        id: { flag: '🇮🇩', names: ['indonesian', ' id ', ' ind '] },
+        tr: { flag: '🇹🇷', names: ['turkish', ' tr ', ' tur '] },
+        nl: { flag: '🇳🇱', names: ['dutch', ' nl ', ' dut '] },
+        pl: { flag: '🇵🇱', names: ['polish', ' pl ', ' pol '] },
+        uk: { flag: '🇺🇦', names: ['ukrainian', ' uk ', ' ukr '] },
+        ro: { flag: '🇷🇴', names: ['romanian', ' ro ', ' ron '] },
+        hu: { flag: '🇭🇺', names: ['hungarian', ' hu ', ' hun '] },
+        cs: { flag: '🇨🇿', names: ['czech', ' cs ', ' ces '] },
+        sv: { flag: '🇸🇪', names: ['swedish', ' sv ', ' swe '] },
+        da: { flag: '🇩🇰', names: ['danish', ' da ', ' dan '] },
+        no: { flag: '🇳🇴', names: ['norwegian', ' no ', ' nor '] },
+        fi: { flag: '🇫🇮', names: ['finnish', ' fi ', ' fin '] },
+        el: { flag: '🇬🇷', names: ['greek', ' el ', ' gre '] },
+        fa: { flag: '🇮🇷', names: ['persian', ' fa ', ' per '] },
+        sw: { flag: '🇹🇿', names: ['swahili', ' sw ', ' swa '] },
+        ta: { flag: '🇮🇳', names: ['tamil', ' ta ', ' tam '] },
+        te: { flag: '🇮🇳', names: ['telugu', ' te ', ' tel '] }
     };
 
     const found = Object.entries(languages)
