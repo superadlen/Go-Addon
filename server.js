@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.6.2', 
+    version: '2.6.3', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -200,21 +200,18 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     }
                     if (!infoHash && !stream.url) continue;
 
-                    // Extraction du nom de fichier propre (sans les sauts de ligne de la source)
                     const fileName = rawTitle.split('\n')[0] || stream.name || 'Unknown File';
-                    const qualityText = info.quality.split(':')[1].toUpperCase();
+                    const qualityTag = info.quality.split(':')[1].toUpperCase();
 
                     sourceStreams.push({
-                        // Affiche : Torrent-Dz:X (ligne 1) et QUALITE (ligne 2)
-                        name: `${source.name} |  ${qualityText}`,
-                        // Affiche : Nom du fichier (ligne 1), puis Stats, puis Langue, puis Codecs
+                        name: `${source.name} |  ${qualityTag}`,
                         title: `${fileName}\n${size} | 👤= ${seedsCount} | 🌐= ${peerSite}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
+                        qualityType: qualityTag, // Champ temporaire pour le filtrage
+                        seeds: seedsCount,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
                     });
-
-                    if (sourceStreams.length >= 20) break;
                 }
                 return sourceStreams;
             }
@@ -233,19 +230,35 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
+    // Tri initial par qualité et seeders
     allStreams.sort((a, b) => {
         const qA = getQualityScore(a.name + a.title);
         const qB = getQualityScore(b.name + b.title);
         if (qB !== qA) return qB - qA;
-        return getSeeders(b.title) - getSeeders(a.title);
+        return b.seeds - a.seeds;
     });
+
+    // --- LOGIQUE DE LIMITATION PAR QUALITÉ ---
+    const limitedStreams = [];
+    const qualityCounts = {};
+
+    for (const stream of allStreams) {
+        const q = stream.qualityType;
+        qualityCounts[q] = (qualityCounts[q] || 0) + 1;
+
+        if (qualityCounts[q] <= 5) {
+            // On supprime les propriétés temporaires avant l'envoi
+            delete stream.qualityType;
+            delete stream.seeds;
+            limitedStreams.push(stream);
+        }
+    }
     
-    const result = { streams: allStreams };
+    const result = { streams: limitedStreams };
     cache.set(cacheKey, result);
     res.json(result);
 });
 
-// --- PAGE D'ACCUEIL / INSTALLATION ---
 app.get('/', (req, res) => {
     const manifestUrl = `${req.protocol}://${req.get('host')}/manifest.json`;
     const stremioUrl = manifestUrl.replace('https://', 'stremio://').replace('http://', 'stremio://');
