@@ -238,6 +238,11 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
                 for (const stream of response.data.streams) {
                     const rawTitle = stream.title || '';
+
+                    // ❌ FILTRE ICI : supprimer si aucune taille détectée
+                    const size = getFileSize(rawTitle);
+                    if (!size) continue;
+
                     const info = getQualityInfo(rawTitle);
                     
                     // On définit l'identifiant de qualité (ex: 4K, 1080P)
