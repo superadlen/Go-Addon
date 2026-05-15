@@ -23,7 +23,7 @@ const MANIFEST = {
 
 const SOURCES = [
     { url: 'https://addon.peerflix.mov/language=en|qualityfilter=sd,480p,540p,hdtv,screener,vhs,unknown|sort=seed-desc,quality-desc,size-desc', name: 'Torrent-Dz: S1' },
-    { url: 'https://filmora-production.up.railway.app/stream', name: 'Torrent-Dz: S2' },
+    { url: 'https://filmora-production.up.railway.app', name: 'Torrent-Dz: S2' },
     { url: 'https://str.zmb.lat/lite', name: 'Torrent-Dz: S3' },
     { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz: S4' },
 ];
