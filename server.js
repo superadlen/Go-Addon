@@ -91,14 +91,18 @@ function getFileSize(title) {
 function getSeeders(title) {
     if (!title) return 0;
 
-    const t = String(title);
+    const t = String(title).toLowerCase();
+
+    // Ignore "unknown"
+    if (t.includes('unknown')) return 0;
 
     // Formats supportés :
     // 👤 123
     // 👥 123
-    // Seeders: 123
-    // S:123
     // 👤=123
+    // Seeders: 123
+    // Seeds: 123
+    // S:123
 
     const match = t.match(
         /(?:👤|👥|seeders?|seeds?|s)\s*[:=]?\s*(\d+)/i
