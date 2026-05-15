@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.6.6', 
+    version: '2.6.6',
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -30,38 +30,34 @@ const SOURCES = [
 
 function getPeerSite(title) {
     const t = (title || '').toLowerCase();
-    if (t.includes('yts') || t.includes('yify') || t.includes('yifi')) return 'YTS';
+    if (t.includes('yts') || t.includes('yify')) return 'YTS';
     if (t.includes('1337x')) return '1337X';
     if (t.includes('torrentgalaxy')) return 'TGX';
-    if (t.includes('nyaa')) return 'NYAA';
     return 'P2P';
 }
 
-/* ===================== FILE SIZE ===================== */
+/* ================= SIZE ================= */
 function getFileSize(title) {
     if (!title) return null;
 
     const t = title.replace(/,/g, '.');
-
     const match = t.match(/\b(\d+(?:\.\d+)?)\s*(TB|GB|MB|KB|TIB|GIB|MIB|KIB)\b/i);
     if (!match) return null;
 
     let size = parseFloat(match[1]);
     let unit = match[2].toUpperCase();
 
-    unit = unit
-        .replace('TIB', 'TB')
-        .replace('GIB', 'GB')
-        .replace('MIB', 'MB')
-        .replace('KIB', 'KB');
+    unit = unit.replace('TIB', 'TB')
+               .replace('GIB', 'GB')
+               .replace('MIB', 'MB')
+               .replace('KIB', 'KB');
 
     return `💾= ${size}${unit}`;
 }
 
-/* ===================== SEEDERS (FIX + IGNORE UNKNOWN) ===================== */
+/* ================= SEEDERS ================= */
 function getSeeders(title) {
     if (!title) return 0;
-
     const t = String(title).toLowerCase();
     if (t.includes('unknown')) return 0;
 
@@ -69,7 +65,7 @@ function getSeeders(title) {
     return match ? Number(match[1]) : 0;
 }
 
-/* ===================== QUALITY SCORE ===================== */
+/* ================= QUALITY ================= */
 function getQualityScore(text) {
     const t = (text || '').toLowerCase();
     if (t.includes('4k') || t.includes('2160p')) return 10;
@@ -78,61 +74,51 @@ function getQualityScore(text) {
     return 1;
 }
 
-/* ===================== QUALITY INFO (FULL VERSION) ===================== */
+/* ================= QUALITY INFO ================= */
 function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
     let quality = '';
     let extra = [];
-    let lang = '🎧= ❓🔉';
+    let lang = '🎧= ❓';
 
     const languages = {
-        fr: { flag: '🇫🇷', names: ['french','vf','vff','francais'], label: 'VF' },
-        en: { flag: '🇺🇸', names: ['english','en','eng','anglais'], label: 'VO' },
-        es: { flag: '🇪🇸', names: ['spanish','es','spa'] },
-        it: { flag: '🇮🇹', names: ['italian','it','ita'] },
-        ar: { flag: '🇩🇿', names: ['arabic','ar','ara'] },
-        ru: { flag: '🇷🇺', names: ['russian','ru','rus'] }
+        fr: { flag: '🇫🇷', names: ['french','vf','fr'] },
+        en: { flag: '🇺🇸', names: ['english','en'] },
+        ar: { flag: '🇩🇿', names: ['arabic','ar'] },
+        es: { flag: '🇪🇸', names: ['spanish','es'] }
     };
 
     const found = Object.entries(languages)
-        .filter(([code, data]) =>
-            t.includes(code) || data.names.some(n => t.includes(n))
-        )
-        .map(([code]) => code);
+        .filter(([c, d]) => t.includes(c) || d.names.some(n => t.includes(n)))
+        .map(([c]) => c);
 
     if (found.length >= 2) lang = `🎧= ${found.map(c => languages[c].flag).join('/')}`;
     else if (found.length === 1) lang = `🎧= ${languages[found[0]].flag}`;
 
-    if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
+    if (t.includes('4k')) quality = '🎬:4K';
     else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
     else quality = '🎥:HD';
 
-    if (t.includes('bluray') || t.includes('bdrip')) extra.push('💿BluRay');
-    if (t.includes('remux')) extra.push('📀REMUX');
-    if (t.includes('web-dl')) extra.push('🌐WEB-DL');
-    if (t.includes('webrip')) extra.push('🌍WEBRip');
-    if (t.includes('x265') || t.includes('hevc')) extra.push('HEVC');
-    if (t.includes('x264')) extra.push('X264');
-    if (t.includes('hdr')) extra.push('HDR');
-    if (t.includes('atmos')) extra.push('ATMOS');
-    if (t.includes('sub')) extra.push('SUB');
+    if (t.includes('bluray')) extra.push('BluRay');
+    if (t.includes('web-dl')) extra.push('WEB-DL');
+    if (t.includes('x265')) extra.push('HEVC');
 
     return { quality, extra: extra.join('|'), lang };
 }
 
-/* ===================== FILTER: ONLY REAL MOVIES ===================== */
-function isFakeTorrent(title = '') {
+/* ================= FILTER FAKE ================= */
+function isFake(title = '') {
     const t = title.toLowerCase();
-
-    const fakeKeywords = [
-        'sample', 'trailer', 'test', 'cam sample', 'fake', 'password', 'readme'
-    ];
-
-    return fakeKeywords.some(k => t.includes(k));
+    return (
+        t.includes('sample') ||
+        t.includes('trailer') ||
+        t.includes('test') ||
+        t.includes('fake')
+    );
 }
 
-/* ===================== STREAM ===================== */
+/* ================= STREAM ================= */
 app.get('/stream/:type/:id.json', async (req, res) => {
     const { type, id } = req.params;
     const cacheKey = `${type}-${id}`;
@@ -142,7 +128,10 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
     const promises = SOURCES.map(source =>
         axios.get(`${source.url}/stream/${type}/${id}.json`, { timeout: TIMEOUT })
-        .then(res => res.data.streams || [])
+        .then(res => (res.data.streams || []).map(s => ({
+            ...s,
+            sourceName: source.name
+        })))
         .catch(() => [])
     );
 
@@ -150,59 +139,55 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     let allStreams = results.flat();
 
     const seen = new Set();
-    let finalStreams = [];
+    const final = [];
 
     for (const stream of allStreams) {
         const rawTitle = stream.title || '';
 
-        /* ❌ FILTERS */
         if (!getFileSize(rawTitle)) continue;
-        if (isFakeTorrent(rawTitle)) continue;
+        if (isFake(rawTitle)) continue;
 
         const info = getQualityInfo(rawTitle);
         const size = getFileSize(rawTitle);
         const seeds = getSeeders(rawTitle);
         const peer = getPeerSite(rawTitle);
 
-        let infoHash = stream.infoHash || '';
-        if (!infoHash && !stream.url) continue;
-
-        const key = infoHash || stream.url;
-        if (seen.has(key)) continue;
+        let key = stream.infoHash || stream.url;
+        if (!key || seen.has(key)) continue;
         seen.add(key);
 
         const fileName = rawTitle.split('\n')[0] || 'Unknown';
 
-        finalStreams.push({
-            name: `${source?.name || 'Torrent'} | ${info.quality.split(':')[1]}`,
+        const qTag = info.quality.split(':')[1];
+
+        final.push({
+            name: `${stream.sourceName} | ${qTag}`,
             title:
 `${fileName}
 ${size} | 👤= ${seeds} | 🌐= ${peer}
 ${info.lang}
 ⚙️= ${info.extra || 'Standard'}`,
-            infoHash: infoHash ? infoHash.toLowerCase() : undefined,
-            url: !infoHash ? stream.url : undefined,
-            behaviorHints: { notWebReady: true, bingeGroup: 'link-dz' }
+            infoHash: stream.infoHash?.toLowerCase(),
+            url: stream.url,
+            behaviorHints: { notWebReady: true }
         });
     }
 
-    finalStreams.sort((a, b) => {
-        const qA = getQualityScore(a.title);
-        const qB = getQualityScore(b.title);
-        if (qB !== qA) return qB - qA;
+    final.sort((a, b) => {
+        const qa = getQualityScore(a.title);
+        const qb = getQualityScore(b.title);
+        if (qb !== qa) return qb - qa;
 
-        const sA = getSeeders(a.title);
-        const sB = getSeeders(b.title);
-        return sB - sA;
+        return getSeeders(b.title) - getSeeders(a.title);
     });
 
-    const result = { streams: finalStreams };
-    cache.set(cacheKey, result);
-    res.json(result);
+    cache.set(cacheKey, { streams: final });
+    res.json({ streams: final });
 });
 
+/* ================= MANIFEST ================= */
 app.get('/manifest.json', (req, res) => {
     res.json(MANIFEST);
 });
 
-app.listen(3000, () => console.log('Torrent DZ ONLINE'));
+app.listen(3000, () => console.log('Torrent DZ ONLINE FIXED'));
