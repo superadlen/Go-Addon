@@ -28,24 +28,45 @@ const SOURCES = [
     { url: 'https://zamunda-stremio.tzkppv.com/debrid=none|content=all|quality=4k,1080p,720p|lang=en', name: 'Torrent-Dz: S4' },
 ];
 
+/* ================= FAKE TORRENT FILTER ================= */
+function isFakeTorrent(title) {
+    if (!title) return true;
+
+    const t = title.toLowerCase();
+
+    if (t.includes('sample')) return true;
+    if (t.includes('trailer')) return true;
+    if (t.includes('preview')) return true;
+    if (t.includes('fake')) return true;
+    if (t.includes('nfo')) return true;
+    if (t.includes('readme')) return true;
+
+    const sizeMatch = t.match(/(\d+(?:\.\d+)?)\s*(mb|kb)/i);
+    if (sizeMatch) {
+        const size = parseFloat(sizeMatch[1]);
+        const unit = sizeMatch[2].toLowerCase();
+
+        if (unit === 'kb') return true;
+        if (unit === 'mb' && size < 50) return true;
+    }
+
+    return false;
+}
+
 function getPeerSite(title) {
     const t = (title || '').toLowerCase();
-    if (t.includes('yts') || t.includes('yify')) return 'YTS';
-    if (t.includes('tpb')) return 'TPB';
+    if (t.includes('yts') || t.includes('yify') || t.includes('yifi')) return 'YTS';
+    if (t.includes('thepiratebay') || t.includes('tpb')) return 'TPB';
     if (t.includes('1337x')) return '1337X';
-    if (t.includes('rarbg')) return 'RARBG';
     return 'P2P';
 }
 
-/* ✅ SIZE (NULL = pour filtrer) */
 function getFileSize(title) {
     if (!title) return null;
 
     const t = title.replace(/,/g, '.');
 
-    const match = t.match(
-        /\b(\d+(?:\.\d+)?)\s*(TB|GB|MB|KB|TIB|GIB|MIB|KIB)\b/i
-    );
+    const match = t.match(/\b(\d+(?:\.\d+)?)\s*(TB|GB|MB|KB|TIB|GIB|MIB|KIB)\b/i);
 
     if (!match) return null;
 
@@ -63,7 +84,6 @@ function getFileSize(title) {
     return `💾= ${size}${unit}`;
 }
 
-/* ✅ SEEDERS (ignore unknown) */
 function getSeeders(title) {
     if (!title) return 0;
 
@@ -74,7 +94,6 @@ function getSeeders(title) {
     return match ? Number(match[1]) : 0;
 }
 
-/* QUALITY */
 function getQualityScore(text) {
     const t = (text || '').toLowerCase();
     if (t.includes('4k') || t.includes('2160p')) return 10;
@@ -83,17 +102,19 @@ function getQualityScore(text) {
     return 1;
 }
 
-/* QUALITY INFO (inchangé) */
 function getQualityInfo(title) {
     const t = (title || '').toLowerCase();
 
-    let quality = '🎥:HD';
+    let quality = '';
+    let extra = [];
+    let lang = '🎧= ❓🔉';
 
     if (t.includes('2160p') || t.includes('4k')) quality = '🎬:4K';
     else if (t.includes('1080p')) quality = '📺:1080p';
     else if (t.includes('720p')) quality = '🖥️:720p';
+    else quality = '🎥:HD';
 
-    return { quality, extra: '', lang: '🎧= ❓' };
+    return { quality, extra: extra.join('|'), lang };
 }
 
 /* ================= STREAM ================= */
@@ -119,7 +140,9 @@ app.get('/stream/:type/:id.json', async (req, res) => {
             for (const stream of response.data.streams) {
                 const rawTitle = stream.title || '';
 
-                /* ❌ FILTRE IMPORTANT : PAS DE TAILLE => SKIP */
+                /* ❌ FAKE FILTER */
+                if (isFakeTorrent(rawTitle)) continue;
+
                 const size = getFileSize(rawTitle);
                 if (!size) continue;
 
@@ -139,7 +162,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                 }
                 if (!infoHash && !stream.url) continue;
 
-                const fileName = rawTitle.split('\n')[0] || 'Unknown';
+                const fileName = rawTitle.split('\n')[0] || 'Unknown File';
 
                 sourceStreams.push({
                     name: `${source.name} | ${qTag}`,
@@ -170,9 +193,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         const qB = getQualityScore(b.title);
         if (qB !== qA) return qB - qA;
 
-        const sA = getSeeders(a.title);
-        const sB = getSeeders(b.title);
-        return sB - sA;
+        return getSeeders(a.title) - getSeeders(b.title);
     });
 
     const result = { streams: allStreams };
