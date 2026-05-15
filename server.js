@@ -93,6 +93,13 @@ function getSeeders(title) {
 
     const t = String(title);
 
+    // Formats supportés :
+    // 👤 123
+    // 👥 123
+    // Seeders: 123
+    // S:123
+    // 👤=123
+
     const match = t.match(
         /(?:👤|👥|seeders?|seeds?|s)\s*[:=]?\s*(\d+)/i
     );
