@@ -64,8 +64,40 @@ function getPeerSite(title) {
 }
 
 function getFileSize(title) {
-    const match = (title || '').match(/(\d+(?:\.\d+)?\s*(?:GB|MB|GiB|MiB))/i);
-    return match ? `💾= ${match[0].toUpperCase()}` : '💾= N/A';
+    if (!title) return '💾= N/A';
+
+    const t = title.replace(/,/g, '.');
+
+    const match = t.match(
+        /\b(\d+(?:\.\d+)?)\s*(TB|GB|MB|KB|TIB|GIB|MIB|KIB)\b/i
+    );
+
+    if (!match) return '💾= N/A';
+
+    let size = parseFloat(match[1]);
+    let unit = match[2].toUpperCase();
+
+    unit = unit
+        .replace('TIB', 'TB')
+        .replace('GIB', 'GB')
+        .replace('MIB', 'MB')
+        .replace('KIB', 'KB');
+
+    size = Number(size % 1 === 0 ? size.toFixed(0) : size.toFixed(2));
+
+    return `💾= ${size}${unit}`;
+}
+
+function getSeeders(title) {
+    if (!title) return 0;
+
+    const t = String(title);
+
+    const match = t.match(
+        /(?:👤|👥|seeders?|seeds?|s)\s*[:=]?\s*(\d+)/i
+    );
+
+    return match ? Number(match[1]) : 0;
 }
 
 function getSeeders(title) {
