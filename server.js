@@ -11,7 +11,7 @@ const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
-    version: '2.6.3', 
+    version: '2.6.4', 
     name: 'Torrent♦️Dz',
     description: 'Multi-Sources Rapide - Films & Series By Superadlen DZ',
     resources: ['stream'],
@@ -186,9 +186,21 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         .then(response => {
             if (response.data?.streams) {
                 let sourceStreams = [];
+                // Compteur spécifique à cette source
+                const sourceQualityCounts = {};
+
                 for (const stream of response.data.streams) {
                     const rawTitle = stream.title || '';
                     const info = getQualityInfo(rawTitle);
+                    
+                    // On définit l'identifiant de qualité (ex: 4K, 1080P)
+                    const qTag = info.quality.split(':')[1].toUpperCase();
+                    
+                    // --- LIMITATION PAR SOURCE ET PAR QUALITÉ ---
+                    sourceQualityCounts[qTag] = (sourceQualityCounts[qTag] || 0) + 1;
+                    if (sourceQualityCounts[qTag] > 5) continue; 
+                    // ---------------------------------------------
+
                     const size = getFileSize(rawTitle);
                     const seedsCount = getSeeders(rawTitle);
                     const peerSite = getPeerSite(rawTitle || stream.name || '');
@@ -201,15 +213,12 @@ app.get('/stream/:type/:id.json', async (req, res) => {
                     if (!infoHash && !stream.url) continue;
 
                     const fileName = rawTitle.split('\n')[0] || stream.name || 'Unknown File';
-                    const qualityTag = info.quality.split(':')[1].toUpperCase();
 
                     sourceStreams.push({
-                        name: `${source.name} |  ${qualityTag}`,
+                        name: `${source.name} |  ${qTag}`,
                         title: `${fileName}\n${size} | 👤= ${seedsCount} | 🌐= ${peerSite}\n${info.lang}\n⚙️= ${info.extra || '📦Standard'}`,
                         infoHash: infoHash ? infoHash.toLowerCase() : undefined,
                         url: !infoHash ? stream.url : undefined,
-                        qualityType: qualityTag, // Champ temporaire pour le filtrage
-                        seeds: seedsCount,
                         behaviorHints: { notWebReady: true, bingeGroup: `link-dz` }
                     });
                 }
@@ -230,35 +239,23 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         return false;
     });
     
-    // Tri initial par qualité et seeders
     allStreams.sort((a, b) => {
         const qA = getQualityScore(a.name + a.title);
         const qB = getQualityScore(b.name + b.title);
         if (qB !== qA) return qB - qA;
-        return b.seeds - a.seeds;
+        
+        // Extraction simple des seeders pour le tri final
+        const sA = parseInt((a.title.match(/👤=\s*(\d+)/) || [0,0])[1]);
+        const sB = parseInt((b.title.match(/👤=\s*(\d+)/) || [0,0])[1]);
+        return sB - sA;
     });
-
-    // --- LOGIQUE DE LIMITATION PAR QUALITÉ ---
-    const limitedStreams = [];
-    const qualityCounts = {};
-
-    for (const stream of allStreams) {
-        const q = stream.qualityType;
-        qualityCounts[q] = (qualityCounts[q] || 0) + 1;
-
-        if (qualityCounts[q] <= 5) {
-            // On supprime les propriétés temporaires avant l'envoi
-            delete stream.qualityType;
-            delete stream.seeds;
-            limitedStreams.push(stream);
-        }
-    }
     
-    const result = { streams: limitedStreams };
+    const result = { streams: allStreams };
     cache.set(cacheKey, result);
     res.json(result);
 });
 
+// --- PAGE D'ACCUEIL / INSTALLATION ---
 app.get('/', (req, res) => {
     const manifestUrl = `${req.protocol}://${req.get('host')}/manifest.json`;
     const stremioUrl = manifestUrl.replace('https://', 'stremio://').replace('http://', 'stremio://');
@@ -312,4 +309,4 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`⚡ Torrent♦️Dz v2.5.9 Online`));
+app.listen(PORT, () => console.log(`⚡ Torrent♦️Dz Online`));
