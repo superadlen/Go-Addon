@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 
 const cache = new NodeCache({ stdTTL: 1800, checkperiod: 120 });
-const TIMEOUT = 2000;
+const TIMEOUT = 7000;
 
 const MANIFEST = {
     id: 'org.golink.payload',
