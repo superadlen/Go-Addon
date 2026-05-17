@@ -12,7 +12,7 @@ RUN npm install --production
 COPY . .
 
 # Exposition du port utilisé par ton script express
-EXPOSE 3000
+EXPOSE 7860
 
 # Lancement du serveur
 CMD ["node", "server.js"]
