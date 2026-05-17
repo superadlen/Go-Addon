@@ -267,7 +267,8 @@ app.get('/manifest.json', (req, res) => {
     res.json(MANIFEST);
 });
 
-app.listen(3000, () => console.log('Torrent DZ ONLINE FIXED'));
+const PORT = process.env.PORT || 7860;
+app.listen(PORT, () => console.log(`Torrent DZ ONLINE FIXED ON PORT ${PORT}`));
 /* ================= ROOT ROUTE FOR HUGGING FACE PING ================= */
 app.get('/', (req, res) => {
     res.json(MANIFEST);
