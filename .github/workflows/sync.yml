@@ -1,0 +1,23 @@
+name: Sync to Hugging Face
+on:
+  push:
+    branches: [main]
+  # Permet de lancer la synchronisation manuellement si besoin
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to HF
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        # Remplace 'ton-pseudo-hf' par ton vrai nom d'utilisateur Hugging Face
+        # Remplace 'ton-space-hf' par le nom exact de ton Space créé à l'étape 2
+        run: git push --force https://ton-pseudo-hf:$HF_TOKEN@huggingface.co/spaces/Superadlen/TorrentGT
