@@ -268,3 +268,7 @@ app.get('/manifest.json', (req, res) => {
 });
 
 app.listen(3000, () => console.log('Torrent DZ ONLINE FIXED'));
+/* ================= ROOT ROUTE FOR HUGGING FACE PING ================= */
+app.get('/', (req, res) => {
+    res.json(MANIFEST);
+});
